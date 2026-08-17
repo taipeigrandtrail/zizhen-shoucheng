@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="字陣守城">
   <title>字陣守城｜公開測試版</title>
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <main class="game-shell" aria-label="字陣守城遊戲">
@@ -28,11 +28,11 @@
     <section class="battle-section" aria-labelledby="battle-title">
       <div class="section-heading">
         <h2 id="battle-title">字陣戰場</h2>
-        <span>敵軍沿ㄇ字路線進攻</span>
+        <span>敵軍貼著字陣邊緣進攻</span>
       </div>
       <div class="battlefield">
         <svg class="route-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M 8 91 L 8 8 L 92 8 L 92 91" />
+          <path d="M 24 88 L 23 73 L 12 73 L 12 50 L 23 50 L 23 27 L 34 27 L 34 12 L 66 12 L 66 38 L 77 38 L 77 73 L 88 73 L 88 88" />
         </svg>
         <span class="entrance" aria-hidden="true">入口</span>
         <div id="range-indicator" class="range-indicator" aria-hidden="true"></div>
@@ -48,7 +48,7 @@
     <section class="pocket-section" aria-labelledby="pocket-title">
       <div class="section-heading">
         <h2 id="pocket-title">口袋</h2>
-        <span>先後點兩顆，或直接拖曳合體</span>
+        <span>戰鬥棋子可拖回口袋空格</span>
       </div>
       <div id="pocket" class="pocket" aria-label="五格口袋"></div>
     </section>
@@ -68,7 +68,7 @@
       <ol id="dialog-list">
         <li>花 10 個饅頭刷新，口袋會出現 5 個文字或道具。</li>
         <li>口袋內先後點選兩顆相同文字、相同星級即可合體，也可以直接拖曳，最高 5 星。</li>
-        <li>把鏟子拖到鎖定格可以開地；點戰鬥文字可查看完整屬性。</li>
+        <li>把鏟子拖到鎖定格可以開地；戰鬥棋子也能拖回口袋空格。</li>
       </ol>
       <p id="dialog-detail" class="dialog-detail"></p>
       <button id="start" type="button">開始守城</button>
@@ -82,6 +82,6 @@
     </section>
   </div>
 
-  <script src="app.js?v=8" defer></script>
+  <script src="app.js?v=9" defer></script>
 </body>
 </html>

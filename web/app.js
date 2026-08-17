@@ -8,7 +8,7 @@
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
-  const INITIAL_UNLOCKED = new Set([7, 8, 11, 12, 15, 16]);
+  const INITIAL_UNLOCKED = new Set([6, 7, 11, 12, 16, 17]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
     { kind: "unit", glyph: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeRadius: 39, rangeLabel: "中", effect: "穿透", role: "中距穿透" },
@@ -17,16 +17,20 @@
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
   const SLOT_LAYOUT = [
-    [1, 1], [2, 1], [3, 1], [4, 1], [5, 1],
-    [1, 2], [2, 2], [3, 2], [4, 2], [5, 2],
+    [3, 1], [4, 1],
+    [2, 2], [3, 2], [4, 2],
     [2, 3], [3, 3], [4, 3], [5, 3],
-    [2, 4], [3, 4], [4, 4], [5, 4], [6, 4],
-    [2, 5], [3, 5], [4, 5],
-    [3, 6], [4, 6]
+    [1, 4], [2, 4], [3, 4], [4, 4], [5, 4],
+    [1, 5], [2, 5], [3, 5], [4, 5], [5, 5],
+    [2, 6], [3, 6], [4, 6], [5, 6], [6, 6]
   ];
 
   const ROUTE_POINTS = [
-    { x: 8, y: 91 }, { x: 8, y: 8 }, { x: 92, y: 8 }, { x: 92, y: 91 }
+    { x: 24, y: 88 }, { x: 23, y: 73 }, { x: 12, y: 73 },
+    { x: 12, y: 50 }, { x: 23, y: 50 }, { x: 23, y: 27 },
+    { x: 34, y: 27 }, { x: 34, y: 12 }, { x: 66, y: 12 },
+    { x: 66, y: 38 }, { x: 77, y: 38 }, { x: 77, y: 73 },
+    { x: 88, y: 73 }, { x: 88, y: 88 }
   ];
   const ROUTE_SEGMENTS = ROUTE_POINTS.slice(0, -1).map((point, index) => ({
     from: point,
@@ -285,6 +289,31 @@
     renderPocket();
   }
 
+  function returnBoardUnitToPocket(boardIndex, pocketIndex) {
+    const source = state.units[boardIndex];
+    const target = state.pocket[pocketIndex];
+    if (!source) return;
+    if (!target) {
+      state.pocket[pocketIndex] = source;
+      state.units[boardIndex] = null;
+      selectedPocketIndex = null;
+      showStatus(`已把「${source.glyph}」收回口袋。`);
+    } else if (target.kind === "unit" && canCombine(source, target)) {
+      state.pocket[pocketIndex] = { ...target, level: target.level + 1 };
+      state.units[boardIndex] = null;
+      selectedPocketIndex = null;
+      showStatus(`收回並合體成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
+    } else if (target.kind === "unit" && source.glyph === target.glyph && source.level === target.level) {
+      showStatus("這兩個文字都已經是最高 5 星。請改拖到口袋空格。");
+      return;
+    } else {
+      showStatus("這個口袋格已有其他內容，請拖到空格或相同文字、相同星級的棋子。");
+      return;
+    }
+    renderPocket();
+    render();
+  }
+
   function tapPocketItem(index) {
     const item = state.pocket[index];
     if (!item) {
@@ -362,6 +391,7 @@
       cleanupPointerDrag();
       if (drag.source === "board") {
         if (target?.area === "board" && target.index !== drag.index) moveOrCombine(drag.index, target.index);
+        else if (target?.area === "pocket") returnBoardUnitToPocket(drag.index, target.index);
         else showStatus("沒有放到其他格子，文字回到原位。");
       } else if (target?.area === "pocket" && target.index !== drag.index) {
         combinePocketItems(drag.index, target.index);
@@ -563,7 +593,7 @@
       } else if (unit) {
         const attack = unit.damage * (2 ** (unit.level - 1));
         slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(unit.level)}</span>`;
-        slot.setAttribute("aria-label", `${unit.name}，${unit.level} 星，點擊查看屬性，攻擊 ${attack}`);
+        slot.setAttribute("aria-label", `${unit.name}，${unit.level} 星，點擊查看屬性，可拖回口袋，攻擊 ${attack}`);
       } else {
         slot.innerHTML = `<span class="glyph">＋</span><span class="stars"></span>`;
         slot.setAttribute("aria-label", `已開放空格 ${index + 1}`);
