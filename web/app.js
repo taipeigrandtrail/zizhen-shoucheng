@@ -664,13 +664,14 @@
 
   function animateUnitAttack(index, unit, enemy) {
     if (attackingSlots.has(index)) return;
+    const kind = unitAttackKind(unit.glyph);
     attackingSlots.add(index);
     renderBoard();
-    createAttackStroke(unitPosition(index), routePoint(enemy.progress), unitAttackKind(unit.glyph));
+    createAttackStroke(unitPosition(index), routePoint(enemy.progress), kind);
     window.setTimeout(() => {
       attackingSlots.delete(index);
       if (state) renderBoard();
-    }, 280);
+    }, ({ bow: 360, blade: 360, spear: 320, cavalry: 480 })[kind] ?? 320);
   }
 
   function createAttackStroke(from, to, kind) {
@@ -686,10 +687,19 @@
     stroke.style.top = `${startY}px`;
     stroke.style.setProperty("--stroke-x", `${dx}px`);
     stroke.style.setProperty("--stroke-y", `${dy}px`);
+    stroke.style.setProperty("--stroke-x-near", `${dx * 0.76}px`);
+    stroke.style.setProperty("--stroke-y-near", `${dy * 0.76}px`);
+    stroke.style.setProperty("--stroke-x-back", `${dx * 0.18}px`);
+    stroke.style.setProperty("--stroke-y-back", `${dy * 0.18}px`);
     stroke.style.setProperty("--stroke-angle", `${angle}deg`);
-    stroke.innerHTML = `<i>${({ bow: "一", blade: "丿", spear: "丨", cavalry: "㇏" })[kind] ?? "丶"}</i>`;
+    stroke.innerHTML = ({
+      bow: "<i></i>",
+      blade: "<i>丿</i>",
+      spear: "<i></i>",
+      cavalry: "<i>㇏</i><b>丿</b><em>丶</em>"
+    })[kind] ?? "<i>丶</i>";
     dom.attackFx.append(stroke);
-    window.setTimeout(() => stroke.remove(), 460);
+    window.setTimeout(() => stroke.remove(), kind === "cavalry" ? 560 : 500);
   }
 
   function showRangeIndicator(unit, index) {
