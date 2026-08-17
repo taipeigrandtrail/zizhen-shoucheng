@@ -2,13 +2,13 @@
   "use strict";
 
   const BOARD_SIZE = 24;
-  const BOARD_COLUMNS = 4;
+  const BOARD_COLUMNS = 6;
   const BOARD_ROWS = 6;
   const POCKET_SIZE = 5;
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
-  const INITIAL_UNLOCKED = new Set([5, 6, 9, 10, 13, 14]);
+  const INITIAL_UNLOCKED = new Set([7, 8, 11, 12, 15, 16]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
     { kind: "unit", glyph: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeRadius: 39, rangeLabel: "中", effect: "穿透", role: "中距穿透" },
@@ -16,12 +16,13 @@
     { kind: "unit", glyph: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeRadius: 29, rangeLabel: "近", effect: "範圍", role: "近距範圍" }
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
-  const SLOT_JITTER = [
-    [-2, 1, -2], [0, -1, 1], [2, 0, -1], [-1, 1, 2], [1, -1, -1],
-    [1, -1, 1], [-2, 1, -1], [0, 0, 2], [2, -1, -2], [-1, 1, 1],
-    [-1, 1, -1], [1, -1, 2], [-2, 0, 0], [1, 1, -2], [2, -1, 1],
-    [2, 0, -2], [-1, 1, 1], [1, -1, -1], [-2, 0, 2], [0, 1, -1],
-    [-1, -1, 1], [2, 1, -2], [0, -1, 1], [-2, 1, 2]
+  const SLOT_LAYOUT = [
+    [1, 1], [2, 1], [3, 1], [4, 1], [5, 1],
+    [1, 2], [2, 2], [3, 2], [4, 2], [5, 2],
+    [2, 3], [3, 3], [4, 3], [5, 3],
+    [2, 4], [3, 4], [4, 4], [5, 4], [6, 4],
+    [2, 5], [3, 5], [4, 5],
+    [3, 6], [4, 6]
   ];
 
   const ROUTE_POINTS = [
@@ -38,7 +39,8 @@
     food: document.querySelector("#food"), wave: document.querySelector("#wave"),
     base: document.querySelector("#base"), enemyCount: document.querySelector("#enemy-count"),
     attack: document.querySelector("#attack"), enemies: document.querySelector("#enemies"),
-    emptyLane: document.querySelector("#empty-lane"), board: document.querySelector("#board"),
+    emptyLane: document.querySelector("#empty-lane"), battlefield: document.querySelector(".battlefield"),
+    board: document.querySelector("#board"), attackFx: document.querySelector("#attack-fx"),
     pocket: document.querySelector("#pocket"), rangeIndicator: document.querySelector("#range-indicator"),
     refresh: document.querySelector("#refresh"), status: document.querySelector("#status"),
     overlay: document.querySelector("#overlay"), dialogTitle: document.querySelector("#dialog-title"),
@@ -71,13 +73,12 @@
     dom.board.replaceChildren();
     for (let i = 0; i < BOARD_SIZE; i += 1) {
       const button = document.createElement("button");
-      const [x, y, rotation] = SLOT_JITTER[i];
+      const [column, row] = SLOT_LAYOUT[i];
       button.type = "button";
       button.className = "slot locked";
       button.dataset.index = String(i);
-      button.style.setProperty("--jitter-x", `${x}px`);
-      button.style.setProperty("--jitter-y", `${y}px`);
-      button.style.setProperty("--jitter-r", `${rotation}deg`);
+      button.style.gridColumn = String(column);
+      button.style.gridRow = String(row);
       button.setAttribute("role", "gridcell");
       button.addEventListener("pointerdown", event => pointerDown(event, "board", i));
       button.addEventListener("keydown", event => {
@@ -490,7 +491,7 @@
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       const damage = unit.damage * (2 ** (unit.level - 1));
-      animateUnitAttack(unitIndex);
+      animateUnitAttack(unitIndex, unit, eligible[0].enemy);
       applyDamage(eligible[0].enemy, damage);
       if (unit.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, damage * 0.45);
       if (unit.effect === "範圍") {
@@ -552,7 +553,7 @@
       const unlocked = state.unlocked[index];
       const unit = state.units[index];
       const classes = ["slot", unlocked ? (unit ? "filled" : "empty") : "locked"];
-      if (attackingSlots.has(index)) classes.push("attacking");
+      if (attackingSlots.has(index)) classes.push("attacking", `attack-${unitAttackKind(unit?.glyph)}`);
       if (pointerDrag?.dragging && pointerDrag.source === "board" && pointerDrag.index === index) classes.push("drag-source");
       if (currentDropTarget?.area === "board" && currentDropTarget.index === index) classes.push("drop-target");
       slot.className = classes.join(" ");
@@ -618,24 +619,47 @@
   }
 
   function unitPosition(index) {
-    const column = index % BOARD_COLUMNS;
-    const row = Math.floor(index / BOARD_COLUMNS);
+    const [column, row] = SLOT_LAYOUT[index];
     return {
-      x: 21 + (column + 0.5) * (58 / BOARD_COLUMNS),
-      y: 16 + (row + 0.5) * (68 / BOARD_ROWS)
+      x: 16 + (column - 0.5) * (68 / BOARD_COLUMNS),
+      y: 16 + (row - 0.5) * (68 / BOARD_ROWS)
     };
   }
 
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-  function animateUnitAttack(index) {
+  function unitAttackKind(glyph) {
+    return ({ "弓": "bow", "刀": "blade", "槍": "spear", "騎": "cavalry" })[glyph] ?? "ink";
+  }
+
+  function animateUnitAttack(index, unit, enemy) {
     if (attackingSlots.has(index)) return;
     attackingSlots.add(index);
     renderBoard();
+    createAttackStroke(unitPosition(index), routePoint(enemy.progress), unitAttackKind(unit.glyph));
     window.setTimeout(() => {
       attackingSlots.delete(index);
       if (state) renderBoard();
     }, 280);
+  }
+
+  function createAttackStroke(from, to, kind) {
+    const rect = dom.battlefield.getBoundingClientRect();
+    const startX = rect.width * from.x / 100;
+    const startY = rect.height * from.y / 100;
+    const dx = rect.width * (to.x - from.x) / 100;
+    const dy = rect.height * (to.y - from.y) / 100;
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const stroke = document.createElement("span");
+    stroke.className = `attack-stroke ${kind}`;
+    stroke.style.left = `${startX}px`;
+    stroke.style.top = `${startY}px`;
+    stroke.style.setProperty("--stroke-x", `${dx}px`);
+    stroke.style.setProperty("--stroke-y", `${dy}px`);
+    stroke.style.setProperty("--stroke-angle", `${angle}deg`);
+    stroke.innerHTML = `<i>${({ bow: "一", blade: "丿", spear: "丨", cavalry: "㇏" })[kind] ?? "丶"}</i>`;
+    dom.attackFx.append(stroke);
+    window.setTimeout(() => stroke.remove(), 460);
   }
 
   function showRangeIndicator(unit, index) {
