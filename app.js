@@ -79,6 +79,7 @@
   let currentDropTarget = null;
   let selectedPocketIndex = null;
   const attackingSlots = new Set();
+  const attackingGeneralKeys = new Set();
 
   function freshState() {
     const unlocked = Array(BOARD_SIZE).fill(false);
@@ -646,6 +647,17 @@
     };
   }
 
+  function generalCombatStats(formation, formations = activeGeneralFormations()) {
+    const partStats = formation.indexes.map(index => combatStats(state.units[index], formations, index));
+    return {
+      damage: partStats.reduce((sum, stats) => sum + stats.damage, 0),
+      attackSpeed: partStats.reduce((sum, stats) => sum + stats.attackSpeed, 0) / partStats.length,
+      rangeRadius: Math.max(...formation.indexes.map(index => state.units[index].rangeRadius)),
+      effect: formation.id === "zhaoyun" ? "穿透" : formation.id === "guanyu" ? "範圍" : "單體",
+      attackKind: formation.id === "zhaoyun" ? "spear" : formation.id === "guanyu" ? "blade" : "bow"
+    };
+  }
+
   function useGeneralSkill(key) {
     if (!state.running || state.over) return;
     const formation = activeGeneralFormations().find(item => item.key === key);
@@ -679,22 +691,29 @@
   function animateGeneralSkill(formation) {
     const effect = document.createElement("div");
     effect.className = `general-skill-fx ${formation.id}`;
-    effect.innerHTML = `<b>${formation.name}</b><span>${formation.skill}</span><i></i>`;
+    effect.innerHTML = `<b>${formation.name}</b><span>${formation.skill}</span><i></i><em></em><u></u>`;
     dom.attackFx.append(effect);
-    window.setTimeout(() => effect.remove(), 900);
-    formation.indexes.forEach(index => {
-      attackingSlots.add(index);
-      window.setTimeout(() => {
-        attackingSlots.delete(index);
-        if (state) renderBoard(activeGeneralFormations());
-      }, 700);
-    });
+    dom.battlefield.classList.add("skill-casting", `skill-${formation.id}`);
+    attackingGeneralKeys.add(formation.key);
+    renderBoard(activeGeneralFormations());
+    renderGeneralFrames(activeGeneralFormations());
+    window.setTimeout(() => effect.remove(), 1100);
+    window.setTimeout(() => {
+      dom.battlefield.classList.remove("skill-casting", `skill-${formation.id}`);
+      attackingGeneralKeys.delete(formation.key);
+      if (state) {
+        const formations = activeGeneralFormations();
+        renderBoard(formations);
+        renderGeneralFrames(formations);
+      }
+    }, 850);
   }
 
   function updateUnitAttacks(delta) {
     const formations = activeGeneralFormations();
+    const linkedIndexes = new Set(formations.flatMap(formation => formation.indexes));
     state.units.forEach((unit, unitIndex) => {
-      if (!unit) return;
+      if (!unit || unit.generalId || linkedIndexes.has(unitIndex)) return;
       unit.cooldown = Math.max(0, (unit.cooldown ?? 0) - delta);
       if (unit.cooldown > 0) return;
       const eligible = state.enemies
@@ -711,6 +730,29 @@
         for (const nearby of eligible.slice(1, 3)) applyDamage(nearby.enemy, damage * 0.5);
       }
       unit.cooldown = 1 / stats.attackSpeed;
+      collectDefeatedEnemies();
+    });
+    formations.forEach(formation => {
+      const parts = formation.indexes.map(index => state.units[index]);
+      let cooldown = Math.max(...parts.map(unit => unit.cooldown ?? 0));
+      cooldown = Math.max(0, cooldown - delta);
+      parts.forEach(unit => { unit.cooldown = cooldown; });
+      if (cooldown > 0) return;
+      const stats = generalCombatStats(formation, formations);
+      const center = generalPosition(formation);
+      const eligible = state.enemies
+        .map(enemy => ({ enemy }))
+        .filter(item => distance(center, routePoint(item.enemy.progress)) <= stats.rangeRadius)
+        .sort((a, b) => b.enemy.progress - a.enemy.progress);
+      if (!eligible.length) return;
+      animateGeneralAttack(formation, eligible[0].enemy, stats.attackKind);
+      applyDamage(eligible[0].enemy, stats.damage);
+      if (stats.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, stats.damage * 0.45);
+      if (stats.effect === "範圍") {
+        for (const nearby of eligible.slice(1, 4)) applyDamage(nearby.enemy, stats.damage * 0.5);
+      }
+      const nextCooldown = 1 / stats.attackSpeed;
+      parts.forEach(unit => { unit.cooldown = nextCooldown; });
       collectDefeatedEnemies();
     });
   }
@@ -730,9 +772,15 @@
 
   function totalAttack() {
     const formations = activeGeneralFormations();
-    return state.units.reduce((sum, unit) => unit
-      ? sum + combatStats(unit, formations).damage * combatStats(unit, formations).attackSpeed
-      : sum, 0);
+    const regularDamage = state.units.reduce((sum, unit, index) => {
+      if (!unit || unit.generalId) return sum;
+      const stats = combatStats(unit, formations, index);
+      return sum + stats.damage * stats.attackSpeed;
+    }, 0);
+    return formations.reduce((sum, formation) => {
+      const stats = generalCombatStats(formation, formations);
+      return sum + stats.damage * stats.attackSpeed;
+    }, regularDamage);
   }
 
   function finish(won) {
@@ -773,10 +821,12 @@
       const unlocked = state.unlocked[index];
       const unit = state.units[index];
       const classes = ["slot", unlocked ? (unit ? "filled" : "empty") : "locked"];
-      if (attackingSlots.has(index)) classes.push("attacking", `attack-${unitAttackKind(unit)}`);
       const linkedGeneral = linked.get(index);
+      if (attackingSlots.has(index) && !linkedGeneral) classes.push("attacking", `attack-${unitAttackKind(unit)}`);
       if (linkedGeneral) classes.push("general-linked", linkedGeneral.orientation,
         generalPartClass(linkedGeneral, index), `general-${linkedGeneral.id}`);
+      if (linkedGeneral && attackingGeneralKeys.has(linkedGeneral.key)) classes.push("general-attacking");
+      if (unit?.generalId && !linkedGeneral) classes.push("sleeping-general");
       if (pointerDrag?.dragging && pointerDrag.source === "board" && pointerDrag.index === index) classes.push("drag-source");
       if (currentDropTarget?.area === "board" && currentDropTarget.index === index) classes.push("drop-target");
       slot.className = classes.join(" ");
@@ -784,10 +834,12 @@
         slot.innerHTML = `<span class="glyph">鎖</span><span class="stars"></span>`;
         slot.setAttribute("aria-label", `鎖定格 ${index + 1}`);
       } else if (unit) {
-        const stats = combatStats(unit, formations);
+        const stats = linkedGeneral ? generalCombatStats(linkedGeneral, formations) : combatStats(unit, formations, index);
         const level = linkedGeneral?.level ?? unit.level;
         slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`;
-        slot.setAttribute("aria-label", `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
+        slot.setAttribute("aria-label", unit.generalId && !linkedGeneral
+          ? `${unit.name}，${level} 星，沉睡中，必須與另一個武將字相鄰才能攻擊`
+          : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
       } else {
         slot.innerHTML = `<span class="glyph">＋</span><span class="stars"></span>`;
         slot.setAttribute("aria-label", `已開放空格 ${index + 1}`);
@@ -804,7 +856,7 @@
   }
 
   function renderGeneralFrames(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${attackingGeneralKeys.has(formation.key)}`).join("|");
     if (dom.generalFrames.dataset.signature === signature) return;
     dom.generalFrames.innerHTML = formations.map(formation => {
       const positions = formation.indexes.map(index => SLOT_LAYOUT[index]);
@@ -812,7 +864,7 @@
       const row = Math.min(...positions.map(position => position[1]));
       const columnSpan = formation.orientation === "horizontal" ? 2 : 1;
       const rowSpan = formation.orientation === "vertical" ? 2 : 1;
-      return `<div class="general-frame ${formation.orientation} general-${formation.id}"
+      return `<div class="general-frame ${formation.orientation} general-${formation.id}${attackingGeneralKeys.has(formation.key) ? " attacking" : ""}"
         style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
         <span>${formation.name}・${"★".repeat(formation.level)}</span>
       </div>`;
@@ -903,6 +955,14 @@
     };
   }
 
+  function generalPosition(formation) {
+    const positions = formation.indexes.map(unitPosition);
+    return {
+      x: positions.reduce((sum, position) => sum + position.x, 0) / positions.length,
+      y: positions.reduce((sum, position) => sum + position.y, 0) / positions.length
+    };
+  }
+
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
   function unitAttackKind(unit) {
@@ -921,7 +981,27 @@
     }, ({ bow: 360, blade: 360, spear: 320, cavalry: 480 })[kind] ?? 320);
   }
 
-  function createAttackStroke(from, to, kind) {
+  function animateGeneralAttack(formation, enemy, kind) {
+    if (attackingGeneralKeys.has(formation.key)) return;
+    attackingGeneralKeys.add(formation.key);
+    const formations = activeGeneralFormations();
+    renderBoard(formations);
+    renderGeneralFrames(formations);
+    const from = generalPosition(formation);
+    const to = routePoint(enemy.progress);
+    createAttackStroke(from, to, kind, true);
+    window.setTimeout(() => createImpactEffect(to, formation.id), kind === "bow" ? 330 : 220);
+    window.setTimeout(() => {
+      attackingGeneralKeys.delete(formation.key);
+      if (state) {
+        const nextFormations = activeGeneralFormations();
+        renderBoard(nextFormations);
+        renderGeneralFrames(nextFormations);
+      }
+    }, 520);
+  }
+
+  function createAttackStroke(from, to, kind, isGeneral = false) {
     const rect = dom.battlefield.getBoundingClientRect();
     const startX = rect.width * from.x / 100;
     const startY = rect.height * from.y / 100;
@@ -929,7 +1009,7 @@
     const dy = rect.height * (to.y - from.y) / 100;
     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
     const stroke = document.createElement("span");
-    stroke.className = `attack-stroke ${kind}`;
+    stroke.className = `attack-stroke ${kind}${isGeneral ? " general-stroke" : ""}`;
     stroke.style.left = `${startX}px`;
     stroke.style.top = `${startY}px`;
     stroke.style.setProperty("--stroke-x", `${dx}px`);
@@ -947,6 +1027,16 @@
     })[kind] ?? "<i>丶</i>";
     dom.attackFx.append(stroke);
     window.setTimeout(() => stroke.remove(), kind === "cavalry" ? 560 : 500);
+  }
+
+  function createImpactEffect(to, generalId) {
+    const impact = document.createElement("span");
+    impact.className = `general-impact ${generalId}`;
+    impact.style.left = `${to.x}%`;
+    impact.style.top = `${to.y}%`;
+    impact.innerHTML = "<i>丶</i><b>丿</b><em>㇏</em>";
+    dom.attackFx.append(impact);
+    window.setTimeout(() => impact.remove(), 480);
   }
 
   function showRangeIndicator(unit, index) {
@@ -967,19 +1057,20 @@
     const linkedGeneral = Number.isInteger(index)
       ? formations.find(formation => formation.indexes.includes(index))
       : null;
-    const stats = combatStats(unit, formations);
+    const sleeping = Boolean(unit.generalId && !linkedGeneral);
+    const stats = linkedGeneral ? generalCombatStats(linkedGeneral, formations) : combatStats(unit, formations, index);
     dom.unitCardContent.innerHTML = `
       <h2 id="unit-modal-title" class="unit-card-title"><b class="${linkedGeneral ? "general-title-glyph" : ""}">${linkedGeneral?.name ?? unit.glyph}</b><span>${linkedGeneral?.name ?? unit.name}<small>${linkedGeneral ? `雙字武將・共同 ${linkedGeneral.level} 星` : `${unit.role}・${unit.level} 星`}</small></span></h2>
       <div class="attribute-grid">
-        <div><span>攻擊力</span><strong>${stats.damage.toFixed(1)}</strong></div>
-        <div><span>攻擊速度</span><strong>${stats.attackSpeed.toFixed(2)} 次／秒</strong></div>
+        <div><span>攻擊力</span><strong>${sleeping ? "0（沉睡）" : stats.damage.toFixed(1)}</strong></div>
+        <div><span>攻擊速度</span><strong>${sleeping ? "—" : `${stats.attackSpeed.toFixed(2)} 次／秒`}</strong></div>
         <div><span>攻擊距離</span><strong>${unit.rangeLabel}距離</strong></div>
         <div><span>攻擊效果</span><strong>${unit.effect}</strong></div>
       </div>
       <p class="unit-card-note">${linkedGeneral
         ? `${linkedGeneral.passive}。必須用另一組同名、同星武將合體升級；拖走其中一字即可拆陣。`
         : unit.generalId
-          ? `${unit.role}；上下或左右相鄰才會啟動，斜角不算。`
+          ? `💤 沉睡中，單字不能攻擊；${unit.role}。上下或左右相鄰才會甦醒成將，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
     showRangeIndicator(unit, index);
     dom.unitModal.classList.remove("hidden");

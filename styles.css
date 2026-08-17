@@ -246,8 +246,9 @@ button { font: inherit; }
   border-color: transparent;
   border-radius: 2px;
   box-shadow: none;
-  background: linear-gradient(145deg, #fff1c6, #ead39b);
+  background: #efdcaa;
 }
+.slot.general-linked .glyph { position: relative; z-index: 2; }
 .slot.general-linked .stars { opacity: 0; }
 .slot.general-linked.link-left { border-radius: 7px 0 0 7px; }
 .slot.general-linked.link-right { border-radius: 0 7px 7px 0; }
@@ -257,8 +258,8 @@ button { font: inherit; }
 .slot.general-linked.link-top::before {
   content: "";
   position: absolute;
-  z-index: -1;
-  background: #ead8aa;
+  z-index: 1;
+  background: #efdcaa;
   pointer-events: none;
 }
 .slot.general-linked.link-left::before { right: -6px; top: 0; width: 7px; height: 100%; }
@@ -297,6 +298,24 @@ button { font: inherit; }
   font-size: 7px;
   font-weight: 900;
   line-height: 1.2;
+}
+.slot.sleeping-general { border-color: #6f7c83; background: #d8d3bd; color: #625f57; }
+.slot.sleeping-general::after {
+  content: "💤";
+  position: absolute;
+  right: -5px;
+  top: -9px;
+  z-index: 3;
+  font-size: clamp(13px, 4vw, 19px);
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.42));
+  animation: sleepy-float 1.45s ease-in-out infinite;
+  pointer-events: none;
+}
+.slot.sleeping-general .glyph { animation: sleepy-breathe 1.45s ease-in-out infinite; }
+.slot.general-linked.general-attacking,
+.general-frame.attacking {
+  z-index: 11;
+  animation: general-unison-hop .52s cubic-bezier(.18,.82,.25,1);
 }
 .slot.locked {
   border-style: dashed;
@@ -350,6 +369,20 @@ button { font: inherit; }
   0% { transform: rotate(0) scale(.96); filter: brightness(1); }
   55% { transform: rotate(245deg) scale(1.14); filter: brightness(1.35); }
   100% { transform: rotate(360deg) scale(1); filter: brightness(1); }
+}
+@keyframes sleepy-float {
+  0%, 100% { transform: translate(0, 2px) scale(.86); opacity: .55; }
+  50% { transform: translate(3px, -6px) scale(1.08); opacity: 1; }
+}
+@keyframes sleepy-breathe {
+  0%, 100% { transform: translateY(1px) scale(.97); opacity: .72; }
+  50% { transform: translateY(-1px) scale(1.02); opacity: .92; }
+}
+@keyframes general-unison-hop {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  36% { transform: translateY(-9px); filter: brightness(1.5) drop-shadow(0 0 6px #ffd86c); }
+  58% { transform: translateY(-9px); filter: brightness(1.35); }
+  82% { transform: translateY(2px); }
 }
 
 .attack-fx {
@@ -440,6 +473,38 @@ button { font: inherit; }
   box-shadow: 0 0 0 4px rgba(240,187,109,.1), inset 0 0 10px rgba(235,142,50,.35);
   animation: cavalry-whirl .52s ease-out forwards;
 }
+.attack-stroke.general-stroke { z-index: 3; filter: brightness(1.35) drop-shadow(0 0 6px currentColor); }
+.attack-stroke.general-stroke.bow i { width: 48px; height: 4px; }
+.attack-stroke.general-stroke.spear i { width: 62px; height: 5px; }
+.attack-stroke.general-stroke.blade i { font-size: 56px; }
+.general-impact {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border: 2px solid #f5d27c;
+  border-radius: 50%;
+  box-shadow: 0 0 18px rgba(255,211,103,.9), inset 0 0 16px rgba(255,211,103,.35);
+  animation: general-impact-burst .46s ease-out forwards;
+}
+.general-impact i, .general-impact b, .general-impact em {
+  position: absolute;
+  color: #fff0aa;
+  font-family: "DFKai-SB", "BiauKai", "KaiTi", serif;
+  font-size: 30px;
+  font-style: normal;
+  text-shadow: 0 0 7px currentColor;
+}
+.general-impact i { left: 7px; top: 5px; transform: rotate(-24deg); }
+.general-impact b { right: 7px; top: 14px; transform: rotate(24deg); }
+.general-impact em { left: 22px; bottom: 0; transform: rotate(80deg); }
+.general-impact.zhaoyun { border-color: #a8ecff; box-shadow: 0 0 20px rgba(83,207,255,.95); }
+.general-impact.huangzhong { border-color: #c7f69a; box-shadow: 0 0 20px rgba(129,221,112,.95); }
+@keyframes general-impact-burst {
+  0% { transform: rotate(-25deg) scale(.2); opacity: 0; }
+  28% { opacity: 1; }
+  100% { transform: rotate(95deg) scale(1.55); opacity: 0; }
+}
 .attack-stroke.cavalry i,
 .attack-stroke.cavalry b,
 .attack-stroke.cavalry em {
@@ -488,7 +553,7 @@ button { font: inherit; }
   display: grid;
   place-content: center;
   text-align: center;
-  animation: general-call .9s ease-out forwards;
+  animation: general-call 1.08s ease-out forwards;
 }
 .general-skill-fx b {
   position: relative;
@@ -511,13 +576,46 @@ button { font: inherit; }
   background: rgba(232,176,72,.46);
   filter: blur(8px);
 }
+.general-skill-fx em,
+.general-skill-fx u {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 105%;
+  height: 105%;
+  transform: translate(-50%, -50%) rotate(0);
+  border: 3px solid rgba(255,229,139,.78);
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(255,203,74,.72), inset 0 0 24px rgba(255,203,74,.3);
+  animation: skill-ring 1s ease-out forwards;
+  text-decoration: none;
+}
+.general-skill-fx u { width: 72%; height: 72%; animation-delay: .1s; }
 .general-skill-fx.zhaoyun i { background: rgba(69,181,213,.48); transform: translate(-50%, -50%) rotate(-34deg); }
 .general-skill-fx.huangzhong i { background: rgba(103,194,119,.48); }
+.general-skill-fx.zhaoyun em, .general-skill-fx.zhaoyun u { border-color: #a8edff; box-shadow: 0 0 28px rgba(74,205,246,.9); }
+.general-skill-fx.huangzhong em, .general-skill-fx.huangzhong u { border-color: #c8f29f; box-shadow: 0 0 28px rgba(111,220,101,.9); }
+.battlefield.skill-casting { animation: battlefield-skill-pulse .85s ease-out; }
+.battlefield.skill-zhaoyun { box-shadow: inset 0 0 52px rgba(73,200,244,.5); }
+.battlefield.skill-guanyu { box-shadow: inset 0 0 52px rgba(255,188,65,.55); }
+.battlefield.skill-huangzhong { box-shadow: inset 0 0 52px rgba(100,214,93,.5); }
 @keyframes general-call {
   0% { transform: scale(.45) rotate(-5deg); opacity: 0; }
   22% { transform: scale(1.08) rotate(1deg); opacity: 1; }
   72% { transform: scale(1); opacity: 1; }
   100% { transform: scale(1.32); opacity: 0; }
+}
+@keyframes skill-ring {
+  0% { transform: translate(-50%, -50%) rotate(-35deg) scale(.25); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(160deg) scale(1.28); opacity: 0; }
+}
+@keyframes battlefield-skill-pulse {
+  0%, 100% { filter: brightness(1); transform: translateX(0); }
+  18% { filter: brightness(1.5); transform: translateX(-2px); }
+  28% { transform: translateX(3px); }
+  40% { transform: translateX(-2px); }
+  58% { filter: brightness(1.25); transform: translateX(1px); }
 }
 
 .general-section {
