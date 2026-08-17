@@ -60,7 +60,8 @@
     base: document.querySelector("#base"), enemyCount: document.querySelector("#enemy-count"),
     attack: document.querySelector("#attack"), enemies: document.querySelector("#enemies"),
     emptyLane: document.querySelector("#empty-lane"), battlefield: document.querySelector(".battlefield"),
-    board: document.querySelector("#board"), attackFx: document.querySelector("#attack-fx"),
+    board: document.querySelector("#board"), generalFrames: document.querySelector("#general-frames"),
+    attackFx: document.querySelector("#attack-fx"),
     pocket: document.querySelector("#pocket"), rangeIndicator: document.querySelector("#range-indicator"),
     refresh: document.querySelector("#refresh"), status: document.querySelector("#status"),
     generals: document.querySelector("#generals"),
@@ -177,6 +178,7 @@
     if (state.refreshCount === 1) {
       state.pocket[0] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
       state.pocket[1] = { ...GENERAL_PARTS[1], level: 1, cooldown: 0 };
+      state.pocket[2] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
     }
     const includeShovel = state.refreshCount % 3 === 0 || (state.refreshCount > 1 && Math.random() < 0.28);
     if (includeShovel) state.pocket[Math.floor(Math.random() * POCKET_SIZE)] = { ...SHOVEL };
@@ -185,7 +187,7 @@
     showStatus(includeShovel
       ? "刷新完成！出現鏟子，把它拖到鎖定格即可開地。"
       : state.refreshCount === 1
-        ? "首次刷新出現「趙、雲」；把兩字上下或左右相鄰，就能組成趙雲。"
+        ? "首次刷新出現「趙、雲、趙」；先拼成趙雲，再把多出的趙合上去，兩字會同步升級。"
         : "刷新完成！武將字上下或左右相鄰，就能組成武將。");
   }
 
@@ -230,10 +232,12 @@
       state.units[from] = null;
       showStatus(`已把「${source.glyph}」移到新位置。`);
     } else if (canCombine(source, target)) {
-      state.units[to] = { ...target, level: target.level + 1 };
+      const upgrade = upgradeUnitOrGeneral(to);
       state.units[from] = null;
       state.food += 2;
-      showStatus(`合成成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
+      showStatus(upgrade.general
+        ? `武將同步升級：${upgrade.general.name}升為 ${upgrade.level} 星！兩個字一起提升。`
+        : `合成成功：「${target.glyph}」升為 ${upgrade.level} 星！`);
     } else if (source.glyph === target.glyph && source.level === target.level) {
       showStatus("這兩個文字都已經是最高 5 星。");
     } else {
@@ -272,9 +276,11 @@
       state.pocket[pocketIndex] = null;
       showStatus(`已把「${item.glyph}」部署到戰鬥場地。`);
     } else if (canCombine(item, target)) {
-      state.units[targetIndex] = { ...target, level: target.level + 1 };
+      const upgrade = upgradeUnitOrGeneral(targetIndex);
       state.pocket[pocketIndex] = null;
-      showStatus(`合成成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
+      showStatus(upgrade.general
+        ? `武將同步升級：${upgrade.general.name}升為 ${upgrade.level} 星！兩個字一起提升。`
+        : `合成成功：「${target.glyph}」升為 ${upgrade.level} 星！`);
     } else if (item.glyph === target.glyph && item.level === target.level) {
       showStatus("這兩個文字都已經是最高 5 星。");
       return;
@@ -288,6 +294,21 @@
 
   function canCombine(source, target) {
     return source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
+  }
+
+  function upgradeUnitOrGeneral(targetIndex) {
+    const formation = activeGeneralFormations().find(item => item.indexes.includes(targetIndex));
+    if (!formation) {
+      const target = state.units[targetIndex];
+      const level = target.level + 1;
+      state.units[targetIndex] = { ...target, level };
+      return { general: null, level };
+    }
+    formation.indexes.forEach(index => {
+      const unit = state.units[index];
+      state.units[index] = { ...unit, level: Math.min(MAX_LEVEL, unit.level + 1) };
+    });
+    return { general: formation, level: Math.min(...formation.indexes.map(index => state.units[index].level)) };
   }
 
   function combinePocketItems(from, to) {
@@ -561,6 +582,7 @@
         const orientation = firstPosition[0] === secondPosition[0] ? "vertical" : "horizontal";
         const sorted = [firstIndex, secondIndex].sort((a, b) => a - b);
         formations.push({ ...general, indexes: [firstIndex, secondIndex], orientation,
+          level: Math.min(state.units[firstIndex].level, state.units[secondIndex].level),
           key: `${general.id}-${sorted[0]}-${sorted[1]}` });
       });
     });
@@ -576,9 +598,11 @@
     if (newNames.length) showStatus(`武將組成：${newNames.join("、")}！被動效果已啟動，可以施放武將技。`);
   }
 
-  function combatStats(unit, formations = activeGeneralFormations()) {
+  function combatStats(unit, formations = activeGeneralFormations(), unitIndex = state.units.indexOf(unit)) {
     let damageMultiplier = 1;
     let speedMultiplier = 1;
+    const linkedGeneral = formations.find(formation => formation.indexes.includes(unitIndex));
+    const effectiveLevel = linkedGeneral?.level ?? unit.level;
     const activeIds = new Set(formations.map(formation => formation.id));
     GENERAL_TYPES.forEach(general => {
       if (!activeIds.has(general.id) || !general.weapons.includes(unit.weapon)) return;
@@ -586,7 +610,7 @@
       speedMultiplier *= general.speedMultiplier ?? 1;
     });
     return {
-      damage: unit.damage * (2 ** (unit.level - 1)) * damageMultiplier,
+      damage: unit.damage * (2 ** (effectiveLevel - 1)) * damageMultiplier,
       attackSpeed: unit.attackSpeed * speedMultiplier
     };
   }
@@ -605,7 +629,7 @@
       showStatus("目前沒有敵軍，先保留武將技。");
       return;
     }
-    const starPower = formation.indexes.reduce((sum, index) => sum + state.units[index].level, 0);
+    const starPower = formation.level * 2;
     if (formation.id === "zhaoyun") {
       state.enemies.slice().sort((a, b) => b.progress - a.progress).slice(0, 3)
         .forEach(enemy => applyDamage(enemy, 36 + starPower * 12));
@@ -706,6 +730,7 @@
     dom.attack.textContent = totalAttack().toFixed(1);
     dom.refresh.disabled = !state.running || state.food < REFRESH_COST;
     renderBoard(formations);
+    renderGeneralFrames(formations);
     renderEnemies();
     renderGenerals(formations);
   }
@@ -713,13 +738,14 @@
   function renderBoard(formations = activeGeneralFormations()) {
     const linked = new Map();
     formations.forEach(formation => formation.indexes.forEach(index => linked.set(index, formation)));
-    [...dom.board.children].forEach((slot, index) => {
+    [...dom.board.querySelectorAll(".slot")].forEach((slot, index) => {
       const unlocked = state.unlocked[index];
       const unit = state.units[index];
       const classes = ["slot", unlocked ? (unit ? "filled" : "empty") : "locked"];
       if (attackingSlots.has(index)) classes.push("attacking", `attack-${unitAttackKind(unit)}`);
       const linkedGeneral = linked.get(index);
-      if (linkedGeneral) classes.push("general-linked", linkedGeneral.orientation, `general-${linkedGeneral.id}`);
+      if (linkedGeneral) classes.push("general-linked", linkedGeneral.orientation,
+        generalPartClass(linkedGeneral, index), `general-${linkedGeneral.id}`);
       if (pointerDrag?.dragging && pointerDrag.source === "board" && pointerDrag.index === index) classes.push("drag-source");
       if (currentDropTarget?.area === "board" && currentDropTarget.index === index) classes.push("drop-target");
       slot.className = classes.join(" ");
@@ -728,8 +754,9 @@
         slot.setAttribute("aria-label", `鎖定格 ${index + 1}`);
       } else if (unit) {
         const stats = combatStats(unit, formations);
-        slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(unit.level)}</span>${linkedGeneral ? `<span class="general-mark">將</span>` : ""}`;
-        slot.setAttribute("aria-label", `${unit.name}，${unit.level} 星，${linkedGeneral ? `已組成${linkedGeneral.name}，` : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
+        const level = linkedGeneral?.level ?? unit.level;
+        slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`;
+        slot.setAttribute("aria-label", `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
       } else {
         slot.innerHTML = `<span class="glyph">＋</span><span class="stars"></span>`;
         slot.setAttribute("aria-label", `已開放空格 ${index + 1}`);
@@ -737,8 +764,33 @@
     });
   }
 
+  function generalPartClass(formation, index) {
+    const position = SLOT_LAYOUT[index];
+    const otherIndex = formation.indexes.find(item => item !== index);
+    const other = SLOT_LAYOUT[otherIndex];
+    if (formation.orientation === "horizontal") return position[0] < other[0] ? "link-left" : "link-right";
+    return position[1] < other[1] ? "link-top" : "link-bottom";
+  }
+
+  function renderGeneralFrames(formations) {
+    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
+    if (dom.generalFrames.dataset.signature === signature) return;
+    dom.generalFrames.innerHTML = formations.map(formation => {
+      const positions = formation.indexes.map(index => SLOT_LAYOUT[index]);
+      const column = Math.min(...positions.map(position => position[0]));
+      const row = Math.min(...positions.map(position => position[1]));
+      const columnSpan = formation.orientation === "horizontal" ? 2 : 1;
+      const rowSpan = formation.orientation === "vertical" ? 2 : 1;
+      return `<div class="general-frame ${formation.orientation} general-${formation.id}"
+        style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
+        <span>${formation.name}・${"★".repeat(formation.level)}</span>
+      </div>`;
+    }).join("");
+    dom.generalFrames.dataset.signature = signature;
+  }
+
   function renderGenerals(formations) {
-    const signature = formations.map(formation => formation.key).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
     if (!formations.length) {
       if (dom.generals.dataset.signature !== "empty") {
         dom.generals.innerHTML = `<p class="general-empty">尚未組成武將：武將字必須上下或左右相鄰，斜角不算。</p>`;
@@ -748,7 +800,7 @@
     }
     if (dom.generals.dataset.signature !== signature) {
       dom.generals.innerHTML = formations.map(formation => `<article class="general-card ${formation.id}" data-general-card-key="${formation.key}">
-        <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}</strong><small>${formation.passive}</small></span></div>
+        <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}・${"★".repeat(formation.level)}</strong><small>${formation.passive}</small></span></div>
         <button class="general-skill" type="button" data-general-key="${formation.key}">${formation.skill}</button>
         <p>${formation.skillNote}</p>
       </article>`).join("");
@@ -886,7 +938,7 @@
       : null;
     const stats = combatStats(unit, formations);
     dom.unitCardContent.innerHTML = `
-      <h2 id="unit-modal-title" class="unit-card-title"><b>${unit.glyph}</b><span>${unit.name}<small>${unit.role}・${unit.level} 星</small></span></h2>
+      <h2 id="unit-modal-title" class="unit-card-title"><b class="${linkedGeneral ? "general-title-glyph" : ""}">${linkedGeneral?.name ?? unit.glyph}</b><span>${linkedGeneral?.name ?? unit.name}<small>${linkedGeneral ? `雙字武將・共同 ${linkedGeneral.level} 星` : `${unit.role}・${unit.level} 星`}</small></span></h2>
       <div class="attribute-grid">
         <div><span>攻擊力</span><strong>${stats.damage.toFixed(1)}</strong></div>
         <div><span>攻擊速度</span><strong>${stats.attackSpeed.toFixed(2)} 次／秒</strong></div>
@@ -894,7 +946,7 @@
         <div><span>攻擊效果</span><strong>${unit.effect}</strong></div>
       </div>
       <p class="unit-card-note">${linkedGeneral
-        ? `已組成武將「${linkedGeneral.name}」：${linkedGeneral.passive}。`
+        ? `${linkedGeneral.passive}。合成其中任一字會同步升級；拖走其中一字即可拆陣。`
         : unit.generalId
           ? `${unit.role}；上下或左右相鄰才會啟動，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
