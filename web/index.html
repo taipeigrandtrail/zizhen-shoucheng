@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#0e151d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="字陣守城">
+  <title>字陣守城｜公開測試版</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body>
+  <main class="game-shell" aria-label="字陣守城遊戲">
+    <header class="game-header">
+      <p class="eyebrow">PUBLIC TEST v0.1</p>
+      <h1>字陣守城</h1>
+      <p>刷新口袋・布置字陣・守住軍旗</p>
+    </header>
+
+    <section class="stats" aria-label="遊戲狀態">
+      <div><span>饅頭</span><strong id="food">30</strong></div>
+      <div><span>波次</span><strong id="wave">1/10</strong></div>
+      <div><span>城防</span><strong id="base">❤❤❤</strong></div>
+      <div><span>敵軍</span><strong id="enemy-count">5</strong></div>
+    </section>
+
+    <section class="battle-section" aria-labelledby="battle-title">
+      <div class="section-heading">
+        <h2 id="battle-title">字陣戰場</h2>
+        <span>敵軍沿著字陣外圍繞行</span>
+      </div>
+      <div class="battlefield">
+        <svg class="route-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 7 8 L 93 8 L 93 92 L 7 92 L 7 28 L 13 28" />
+        </svg>
+        <span class="entrance" aria-hidden="true">入口</span>
+        <div id="range-indicator" class="range-indicator" aria-hidden="true"></div>
+        <div id="board" class="board" role="grid" aria-label="二十五格文字兵棋盤"></div>
+        <div id="enemies" class="enemy-track" aria-live="polite"></div>
+        <div id="empty-lane" class="empty-lane">下一批敵軍正在接近……</div>
+        <div class="flag" aria-label="我方軍旗"><span>旗</span><i></i></div>
+      </div>
+      <p class="attack-total">預估每秒傷害：<strong id="attack">0</strong>　點文字看屬性</p>
+    </section>
+
+    <section class="pocket-section" aria-labelledby="pocket-title">
+      <div class="section-heading">
+        <h2 id="pocket-title">口袋</h2>
+        <span>刷新會替換尚未使用的內容</span>
+      </div>
+      <div id="pocket" class="pocket" aria-label="五格口袋"></div>
+    </section>
+
+    <button id="refresh" class="refresh" type="button">刷新口袋（10 饅頭）</button>
+    <p id="status" class="status" aria-live="polite">準備開始守城。</p>
+
+    <footer>
+      原創玩法原型・不含付費與個人資料
+    </footer>
+  </main>
+
+  <div id="overlay" class="overlay">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+      <p class="dialog-tag">第一次試玩</p>
+      <h2 id="dialog-title">守住 10 波敵軍</h2>
+      <ol id="dialog-list">
+        <li>花 10 個饅頭刷新，口袋會出現 5 個文字或道具。</li>
+        <li>把文字拖到已開放的戰鬥格；戰鬥場上的文字會一直保留。</li>
+        <li>把鏟子拖到鎖定格可以開地；點戰鬥文字可查看完整屬性。</li>
+      </ol>
+      <p id="dialog-detail" class="dialog-detail"></p>
+      <button id="start" type="button">開始守城</button>
+    </section>
+  </div>
+
+  <div id="unit-modal" class="unit-modal hidden">
+    <section class="unit-card" role="dialog" aria-modal="true" aria-labelledby="unit-modal-title">
+      <button id="unit-close" class="unit-close" type="button" aria-label="關閉屬性視窗">×</button>
+      <div id="unit-card-content"></div>
+    </section>
+  </div>
+
+  <script src="app.js?v=4" defer></script>
+</body>
+</html>

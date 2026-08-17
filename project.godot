@@ -1,0 +1,24 @@
+; Engine configuration file.
+; 建議使用 Godot 4.7.1 stable 開啟。
+config_version=5
+
+[application]
+
+config/name="字陣守城"
+run/main_scene="res://main.tscn"
+
+[display]
+
+window/size/viewport_width=540
+window/size/viewport_height=960
+window/size/window_width_override=405
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.055, 0.071, 0.09, 1)
+
