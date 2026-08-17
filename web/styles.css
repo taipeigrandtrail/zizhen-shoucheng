@@ -300,10 +300,11 @@ button { font: inherit; }
   touch-action: none;
 }
 .pocket-item .glyph { display: block; font-size: clamp(23px, 7vw, 34px); font-weight: 800; line-height: 1.15; }
-.pocket-item .label { display: block; color: #785c2f; font-size: 8px; }
+.pocket-item .label { display: block; overflow: hidden; color: #785c2f; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
 .pocket-item.shovel { border-color: #6ab8cf; background: #d5edf0; color: #234b59; }
 .pocket-item.used { border-color: #30424d; background: #17242d; color: #526875; }
 .pocket-item.drag-source { opacity: .35; }
+.pocket-item.drop-target { outline: 4px solid #69cde3; outline-offset: -3px; transform: translateY(-3px); }
 
 .unit-modal {
   position: fixed;

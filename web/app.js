@@ -4,7 +4,7 @@
   const BOARD_SIZE = 25;
   const POCKET_SIZE = 5;
   const REFRESH_COST = 10;
-  const MAX_LEVEL = 3;
+  const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
   const INITIAL_UNLOCKED = new Set([7, 8, 11, 12, 13, 17]);
   const UNIT_TYPES = [
@@ -204,7 +204,7 @@
       state.food += 2;
       showStatus(`合成成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
     } else if (source.glyph === target.glyph && source.level === target.level) {
-      showStatus("這兩個文字都已經是最高 3 星。");
+      showStatus("這兩個文字都已經是最高 5 星。");
     } else {
       state.units[to] = source;
       state.units[from] = target;
@@ -244,6 +244,9 @@
       state.units[targetIndex] = { ...target, level: target.level + 1 };
       state.pocket[pocketIndex] = null;
       showStatus(`合成成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
+    } else if (item.glyph === target.glyph && item.level === target.level) {
+      showStatus("這兩個文字都已經是最高 5 星。");
+      return;
     } else {
       showStatus("這格已有其他文字；請拖到空格，或拖到相同文字進行合成。");
       return;
@@ -254,6 +257,32 @@
 
   function canCombine(source, target) {
     return source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
+  }
+
+  function combinePocketItems(from, to) {
+    const source = state.pocket[from];
+    const target = state.pocket[to];
+    if (!source || from === to) return;
+    if (source.kind === "shovel") {
+      showStatus("鏟子不能合體，請把它拖到戰鬥場地的鎖定格。");
+      return;
+    }
+    if (!target) {
+      state.pocket[to] = source;
+      state.pocket[from] = null;
+      showStatus(`已移動口袋中的「${source.glyph}」。`);
+    } else if (target.kind === "unit" && canCombine(source, target)) {
+      state.pocket[to] = { ...target, level: target.level + 1 };
+      state.pocket[from] = null;
+      showStatus(`口袋合體成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
+    } else if (target.kind === "unit" && source.glyph === target.glyph && source.level === target.level) {
+      showStatus("這兩個文字都已經是最高 5 星。");
+      return;
+    } else {
+      showStatus("口袋只能合體相同文字、相同星級的棋子。");
+      return;
+    }
+    renderPocket();
   }
 
   function pointerDown(event, source, index) {
@@ -292,12 +321,18 @@
     const drag = { ...pointerDrag };
     if (drag.dragging) {
       event.preventDefault();
-      const target = slotAtPoint(event.clientX, event.clientY);
+      const target = dropTargetAtPoint(event.clientX, event.clientY);
       cleanupPointerDrag();
       if (drag.source === "board") {
-        if (target !== null && target !== drag.index) moveOrCombine(drag.index, target);
+        if (target?.area === "board" && target.index !== drag.index) moveOrCombine(drag.index, target.index);
         else showStatus("沒有放到其他格子，文字回到原位。");
-      } else deployPocketItem(drag.index, target);
+      } else if (target?.area === "pocket" && target.index !== drag.index) {
+        combinePocketItems(drag.index, target.index);
+      } else if (target?.area === "board") {
+        deployPocketItem(drag.index, target.index);
+      } else {
+        showStatus("沒有放到口袋或戰鬥格，內容回到原位。");
+      }
       renderBoard();
     } else {
       cleanupPointerDrag();
@@ -331,14 +366,19 @@
     dragGhost.style.top = `${y}px`;
   }
 
-  function slotAtPoint(x, y) {
-    const element = document.elementFromPoint(x, y)?.closest?.(".slot");
-    return element ? Number(element.dataset.index) : null;
+  function dropTargetAtPoint(x, y) {
+    const element = document.elementFromPoint(x, y);
+    const boardSlot = element?.closest?.(".slot");
+    if (boardSlot) return { area: "board", index: Number(boardSlot.dataset.index) };
+    const pocketSlot = element?.closest?.(".pocket-item");
+    if (pocketSlot) return { area: "pocket", index: Number(pocketSlot.dataset.index) };
+    return null;
   }
 
   function updateDropTarget(x, y) {
-    currentDropTarget = slotAtPoint(x, y);
+    currentDropTarget = dropTargetAtPoint(x, y);
     renderBoard();
+    renderPocket();
   }
 
   function cleanupPointerDrag() {
@@ -478,7 +518,7 @@
       const classes = ["slot", unlocked ? (unit ? "filled" : "empty") : "locked"];
       if (attackingSlots.has(index)) classes.push("attacking");
       if (pointerDrag?.dragging && pointerDrag.source === "board" && pointerDrag.index === index) classes.push("drag-source");
-      if (currentDropTarget === index) classes.push("drop-target");
+      if (currentDropTarget?.area === "board" && currentDropTarget.index === index) classes.push("drop-target");
       slot.className = classes.join(" ");
       if (!unlocked) {
         slot.innerHTML = `<span class="glyph">鎖</span><span class="stars"></span>`;
@@ -498,18 +538,19 @@
     [...dom.pocket.children].forEach((slot, index) => {
       const item = state.pocket[index];
       const dragging = pointerDrag?.dragging && pointerDrag.source === "pocket" && pointerDrag.index === index;
+      const dropTarget = currentDropTarget?.area === "pocket" && currentDropTarget.index === index;
       if (!item) {
-        slot.className = `pocket-item used${dragging ? " drag-source" : ""}`;
+        slot.className = `pocket-item used${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
         slot.innerHTML = `<span class="glyph">·</span><span class="label">等待刷新</span>`;
         slot.setAttribute("aria-label", `口袋 ${index + 1}，空`);
       } else if (item.kind === "shovel") {
-        slot.className = `pocket-item shovel${dragging ? " drag-source" : ""}`;
+        slot.className = `pocket-item shovel${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
         slot.innerHTML = `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`;
         slot.setAttribute("aria-label", `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
       } else {
-        slot.className = `pocket-item${dragging ? " drag-source" : ""}`;
-        slot.innerHTML = `<span class="glyph">${item.glyph}</span><span class="label">${item.name}</span>`;
-        slot.setAttribute("aria-label", `口袋 ${index + 1}，${item.name}，拖到戰鬥格`);
+        slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
+        slot.innerHTML = `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`;
+        slot.setAttribute("aria-label", `口袋 ${index + 1}，${item.name}，${item.level} 星，可拖曳合體或部署`);
       }
     });
   }
