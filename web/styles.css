@@ -305,6 +305,7 @@ button { font: inherit; }
 .pocket-item.used { border-color: #30424d; background: #17242d; color: #526875; }
 .pocket-item.drag-source { opacity: .35; }
 .pocket-item.drop-target { outline: 4px solid #69cde3; outline-offset: -3px; transform: translateY(-3px); }
+.pocket-item.selected { outline: 4px solid #ffd25d; outline-offset: -3px; transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 210, 93, .25); }
 
 .unit-modal {
   position: fixed;
