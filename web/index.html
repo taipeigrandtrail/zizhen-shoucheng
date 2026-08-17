@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="字陣守城">
   <title>字陣守城｜公開測試版</title>
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <main class="game-shell" aria-label="字陣守城遊戲">
@@ -45,6 +45,16 @@
       <p class="attack-total">預估每秒傷害：<strong id="attack">0</strong>　點文字看屬性</p>
     </section>
 
+    <section class="general-section" aria-labelledby="general-title">
+      <div class="section-heading">
+        <h2 id="general-title">武將字陣</h2>
+        <span>兩字上下或左右相鄰即可成將</span>
+      </div>
+      <div id="generals" class="generals" aria-live="polite">
+        <p class="general-empty">尚未組成武將：試著把「趙」與「雲」放在一起。</p>
+      </div>
+    </section>
+
     <section class="pocket-section" aria-labelledby="pocket-title">
       <div class="section-heading">
         <h2 id="pocket-title">口袋</h2>
@@ -69,6 +79,7 @@
         <li>花 10 個饅頭刷新，口袋會出現 5 個文字或道具。</li>
         <li>口袋內先後點選兩顆相同文字、相同星級即可合體，也可以直接拖曳，最高 5 星。</li>
         <li>把鏟子拖到鎖定格可以開地；戰鬥棋子也能拖回口袋空格。</li>
+        <li>把「趙雲、關羽、黃忠」的兩個字上下或左右相鄰，可組成武將並施放技能。</li>
       </ol>
       <p id="dialog-detail" class="dialog-detail"></p>
       <button id="start" type="button">開始守城</button>
@@ -82,6 +93,6 @@
     </section>
   </div>
 
-  <script src="app.js?v=10" defer></script>
+  <script src="app.js?v=11" defer></script>
 </body>
 </html>
