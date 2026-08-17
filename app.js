@@ -179,6 +179,7 @@
       state.pocket[0] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
       state.pocket[1] = { ...GENERAL_PARTS[1], level: 1, cooldown: 0 };
       state.pocket[2] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
+      state.pocket[3] = { ...GENERAL_PARTS[1], level: 1, cooldown: 0 };
     }
     const includeShovel = state.refreshCount % 3 === 0 || (state.refreshCount > 1 && Math.random() < 0.28);
     if (includeShovel) state.pocket[Math.floor(Math.random() * POCKET_SIZE)] = { ...SHOVEL };
@@ -187,7 +188,7 @@
     showStatus(includeShovel
       ? "刷新完成！出現鏟子，把它拖到鎖定格即可開地。"
       : state.refreshCount === 1
-        ? "首次刷新出現「趙、雲、趙」；先拼成趙雲，再把多出的趙合上去，兩字會同步升級。"
+        ? "首次刷新出現兩組「趙、雲」；先完成兩組同星趙雲，再把一組拖到另一組進行武將合體。"
         : "刷新完成！武將字上下或左右相鄰，就能組成武將。");
   }
 
@@ -227,17 +228,21 @@
     const source = state.units[from];
     const target = state.units[to];
     if (!source) return;
+    const targetFormation = target
+      ? activeGeneralFormations().find(formation => formation.indexes.includes(to))
+      : null;
     if (!target) {
       state.units[to] = source;
       state.units[from] = null;
       showStatus(`已把「${source.glyph}」移到新位置。`);
+    } else if (targetFormation) {
+      showStatus(`${targetFormation.name}已經是完整武將；必須用另一組同名、同星武將才能升級。`);
+      return;
     } else if (canCombine(source, target)) {
-      const upgrade = upgradeUnitOrGeneral(to);
+      const level = upgradeSingleUnit(to);
       state.units[from] = null;
       state.food += 2;
-      showStatus(upgrade.general
-        ? `武將同步升級：${upgrade.general.name}升為 ${upgrade.level} 星！兩個字一起提升。`
-        : `合成成功：「${target.glyph}」升為 ${upgrade.level} 星！`);
+      showStatus(`合成成功：「${target.glyph}」升為 ${level} 星！`);
     } else if (source.glyph === target.glyph && source.level === target.level) {
       showStatus("這兩個文字都已經是最高 5 星。");
     } else {
@@ -271,16 +276,20 @@
       return;
     }
     const target = state.units[targetIndex];
+    const targetFormation = target
+      ? activeGeneralFormations().find(formation => formation.indexes.includes(targetIndex))
+      : null;
     if (!target) {
       state.units[targetIndex] = { ...item, cooldown: 0 };
       state.pocket[pocketIndex] = null;
       showStatus(`已把「${item.glyph}」部署到戰鬥場地。`);
+    } else if (targetFormation) {
+      showStatus(`單獨的「${item.glyph}」不能升級${targetFormation.name}；請先完成另一組同名、同星武將。`);
+      return;
     } else if (canCombine(item, target)) {
-      const upgrade = upgradeUnitOrGeneral(targetIndex);
+      const level = upgradeSingleUnit(targetIndex);
       state.pocket[pocketIndex] = null;
-      showStatus(upgrade.general
-        ? `武將同步升級：${upgrade.general.name}升為 ${upgrade.level} 星！兩個字一起提升。`
-        : `合成成功：「${target.glyph}」升為 ${upgrade.level} 星！`);
+      showStatus(`合成成功：「${target.glyph}」升為 ${level} 星！`);
     } else if (item.glyph === target.glyph && item.level === target.level) {
       showStatus("這兩個文字都已經是最高 5 星。");
       return;
@@ -296,19 +305,39 @@
     return source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
   }
 
-  function upgradeUnitOrGeneral(targetIndex) {
-    const formation = activeGeneralFormations().find(item => item.indexes.includes(targetIndex));
-    if (!formation) {
-      const target = state.units[targetIndex];
-      const level = target.level + 1;
-      state.units[targetIndex] = { ...target, level };
-      return { general: null, level };
+  function upgradeSingleUnit(targetIndex) {
+    const target = state.units[targetIndex];
+    const level = target.level + 1;
+    state.units[targetIndex] = { ...target, level };
+    return level;
+  }
+
+  function tryCombineGeneralFormations(from, to) {
+    const formations = activeGeneralFormations();
+    const sourceGeneral = formations.find(formation => formation.indexes.includes(from));
+    const targetGeneral = formations.find(formation => formation.indexes.includes(to));
+    if (!sourceGeneral || !targetGeneral || sourceGeneral.key === targetGeneral.key) return false;
+    if (sourceGeneral.id !== targetGeneral.id) {
+      showStatus("只有同名武將才能合體升級。");
+      return true;
     }
-    formation.indexes.forEach(index => {
+    if (sourceGeneral.level !== targetGeneral.level) {
+      showStatus(`兩組${targetGeneral.name}必須星級相同才能合體。`);
+      return true;
+    }
+    if (targetGeneral.level >= MAX_LEVEL) {
+      showStatus(`${targetGeneral.name}已經是最高 5 星。`);
+      return true;
+    }
+    targetGeneral.indexes.forEach(index => {
       const unit = state.units[index];
       state.units[index] = { ...unit, level: Math.min(MAX_LEVEL, unit.level + 1) };
     });
-    return { general: formation, level: Math.min(...formation.indexes.map(index => state.units[index].level)) };
+    sourceGeneral.indexes.forEach(index => { state.units[index] = null; });
+    state.food += 4;
+    showStatus(`武將合體成功：${targetGeneral.name}升為 ${targetGeneral.level + 1} 星！`);
+    render();
+    return true;
   }
 
   function combinePocketItems(from, to) {
@@ -439,7 +468,9 @@
       const target = dropTargetAtPoint(event.clientX, event.clientY);
       cleanupPointerDrag();
       if (drag.source === "board") {
-        if (target?.area === "board" && target.index !== drag.index) moveOrCombine(drag.index, target.index);
+        if (target?.area === "board" && target.index !== drag.index) {
+          if (!tryCombineGeneralFormations(drag.index, target.index)) moveOrCombine(drag.index, target.index);
+        }
         else if (target?.area === "pocket") returnBoardUnitToPocket(drag.index, target.index);
         else showStatus("沒有放到其他格子，文字回到原位。");
       } else if (target?.area === "pocket" && target.index !== drag.index) {
@@ -946,7 +977,7 @@
         <div><span>攻擊效果</span><strong>${unit.effect}</strong></div>
       </div>
       <p class="unit-card-note">${linkedGeneral
-        ? `${linkedGeneral.passive}。合成其中任一字會同步升級；拖走其中一字即可拆陣。`
+        ? `${linkedGeneral.passive}。必須用另一組同名、同星武將合體升級；拖走其中一字即可拆陣。`
         : unit.generalId
           ? `${unit.role}；上下或左右相鄰才會啟動，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
