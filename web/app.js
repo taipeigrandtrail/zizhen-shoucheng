@@ -1,12 +1,14 @@
 (() => {
   "use strict";
 
-  const BOARD_SIZE = 25;
+  const BOARD_SIZE = 24;
+  const BOARD_COLUMNS = 4;
+  const BOARD_ROWS = 6;
   const POCKET_SIZE = 5;
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
-  const INITIAL_UNLOCKED = new Set([7, 8, 11, 12, 13, 17]);
+  const INITIAL_UNLOCKED = new Set([5, 6, 9, 10, 13, 14]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
     { kind: "unit", glyph: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeRadius: 39, rangeLabel: "中", effect: "穿透", role: "中距穿透" },
@@ -19,12 +21,11 @@
     [1, -1, 1], [-2, 1, -1], [0, 0, 2], [2, -1, -2], [-1, 1, 1],
     [-1, 1, -1], [1, -1, 2], [-2, 0, 0], [1, 1, -2], [2, -1, 1],
     [2, 0, -2], [-1, 1, 1], [1, -1, -1], [-2, 0, 2], [0, 1, -1],
-    [-1, -1, 1], [2, 1, -2], [0, -1, 1], [-2, 1, 2], [1, 0, -1]
+    [-1, -1, 1], [2, 1, -2], [0, -1, 1], [-2, 1, 2]
   ];
 
   const ROUTE_POINTS = [
-    { x: 7, y: 8 }, { x: 93, y: 8 }, { x: 93, y: 92 },
-    { x: 7, y: 92 }, { x: 7, y: 28 }, { x: 13, y: 28 }
+    { x: 8, y: 91 }, { x: 8, y: 8 }, { x: 92, y: 8 }, { x: 92, y: 91 }
   ];
   const ROUTE_SEGMENTS = ROUTE_POINTS.slice(0, -1).map((point, index) => ({
     from: point,
@@ -617,9 +618,12 @@
   }
 
   function unitPosition(index) {
-    const column = index % 5;
-    const row = Math.floor(index / 5);
-    return { x: 15 + (column + 0.5) * 14, y: 15 + (row + 0.5) * 14 };
+    const column = index % BOARD_COLUMNS;
+    const row = Math.floor(index / BOARD_COLUMNS);
+    return {
+      x: 21 + (column + 0.5) * (58 / BOARD_COLUMNS),
+      y: 16 + (row + 0.5) * (68 / BOARD_ROWS)
+    };
   }
 
   function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }

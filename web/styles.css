@@ -113,7 +113,7 @@ button { font: inherit; }
   box-shadow: 0 4px 12px rgba(215,63,49,.45);
   color: white;
   text-align: center;
-  transition: left .16s linear;
+  transition: left .16s linear, top .16s linear;
 }
 .enemy-token strong { display: block; font-size: 19px; line-height: 30px; }
 .enemy-token small {
@@ -146,8 +146,8 @@ button { font: inherit; }
 .enemy-token.boss strong { line-height: 40px; }
 .flag {
   position: absolute;
-  left: 10%;
-  top: 28%;
+  left: 92%;
+  top: 91%;
   z-index: 7;
   width: 38px;
   height: 54px;
@@ -192,7 +192,7 @@ button { font: inherit; }
 .entrance {
   position: absolute;
   left: 2%;
-  top: 1%;
+  bottom: 2%;
   z-index: 6;
   padding: 2px 5px;
   border-radius: 4px;
@@ -214,14 +214,14 @@ button { font: inherit; }
 
 .board {
   position: absolute;
-  left: 15%;
-  top: 15%;
+  left: 21%;
+  top: 16%;
   z-index: 3;
   display: grid;
-  width: 70%;
-  height: 70%;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: repeat(5, minmax(0, 1fr));
+  width: 58%;
+  height: 68%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(6, minmax(0, 1fr));
   gap: clamp(2px, .7vw, 4px);
 }
 
@@ -392,20 +392,33 @@ footer { color: #536976; text-align: center; font-size: 10px; }
   z-index: 100;
   display: grid;
   place-items: center;
-  width: 74px;
-  height: 74px;
+  width: 48px;
+  height: 48px;
   pointer-events: none;
-  transform: translate(-50%, -58%) rotate(-3deg);
-  border: 3px solid #69cde3;
-  border-radius: 13px;
+  transform: translate(-50%, -145%);
+  border: 2px solid #69cde3;
+  border-radius: 50%;
   background: #fff0c7;
-  box-shadow: 0 16px 30px rgba(0,0,0,.5);
+  box-shadow: 0 7px 16px rgba(0,0,0,.42);
   color: #392d21;
-  font-size: 31px;
+  font-size: 22px;
   font-weight: 800;
 }
-.drag-ghost span { position: absolute; bottom: 5px; color: #a96d05; font-size: 10px; }
+.drag-ghost::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 2px solid #69cde3;
+  border-bottom: 2px solid #69cde3;
+  background: #fff0c7;
+}
+.drag-ghost span { position: absolute; bottom: 2px; z-index: 1; color: #a96d05; font-size: 7px; }
 .drag-ghost.shovel { border-color: #6ab8cf; background: #d5edf0; color: #234b59; }
+.drag-ghost.shovel::after { border-color: #6ab8cf; background: #d5edf0; }
 body.is-dragging { overflow: hidden; }
 
 @media (max-height: 740px) {
