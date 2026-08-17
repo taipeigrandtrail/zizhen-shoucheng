@@ -52,6 +52,7 @@
   let pointerDrag = null;
   let dragGhost = null;
   let currentDropTarget = null;
+  let selectedPocketIndex = null;
   const attackingSlots = new Set();
 
   function freshState() {
@@ -78,9 +79,6 @@
       button.style.setProperty("--jitter-r", `${rotation}deg`);
       button.setAttribute("role", "gridcell");
       button.addEventListener("pointerdown", event => pointerDown(event, "board", i));
-      button.addEventListener("pointermove", pointerMove);
-      button.addEventListener("pointerup", event => pointerUp(event, "board", i));
-      button.addEventListener("pointercancel", cancelPointerDrag);
       button.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") inspectBoardSlot(i);
       });
@@ -96,9 +94,6 @@
       button.className = "pocket-item used";
       button.dataset.index = String(i);
       button.addEventListener("pointerdown", event => pointerDown(event, "pocket", i));
-      button.addEventListener("pointermove", pointerMove);
-      button.addEventListener("pointerup", event => pointerUp(event, "pocket", i));
-      button.addEventListener("pointercancel", cancelPointerDrag);
       button.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") inspectPocketItem(i);
       });
@@ -108,6 +103,7 @@
 
   function startGame() {
     state = freshState();
+    selectedPocketIndex = null;
     state.running = true;
     state.spawnClock = 0.8;
     lastFrame = performance.now();
@@ -144,6 +140,7 @@
       return;
     }
     state.food -= REFRESH_COST;
+    selectedPocketIndex = null;
     state.refreshCount += 1;
     state.pocket = Array.from({ length: POCKET_SIZE }, () => {
       const template = UNIT_TYPES[Math.floor(Math.random() * UNIT_TYPES.length)];
@@ -274,6 +271,7 @@
     } else if (target.kind === "unit" && canCombine(source, target)) {
       state.pocket[to] = { ...target, level: target.level + 1 };
       state.pocket[from] = null;
+      selectedPocketIndex = null;
       showStatus(`口袋合體成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
     } else if (target.kind === "unit" && source.glyph === target.glyph && source.level === target.level) {
       showStatus("這兩個文字都已經是最高 5 星。");
@@ -285,8 +283,45 @@
     renderPocket();
   }
 
+  function tapPocketItem(index) {
+    const item = state.pocket[index];
+    if (!item) {
+      selectedPocketIndex = null;
+      renderPocket();
+      showStatus("這個口袋位置是空的，刷新後會補上新內容。");
+      return;
+    }
+    if (item.kind === "shovel") {
+      selectedPocketIndex = null;
+      renderPocket();
+      inspectPocketItem(index);
+      return;
+    }
+    if (selectedPocketIndex === null) {
+      selectedPocketIndex = index;
+      renderPocket();
+      showStatus(`已選擇「${item.glyph}」${item.level} 星；再點相同文字、相同星級即可合體。`);
+      return;
+    }
+    if (selectedPocketIndex === index) {
+      selectedPocketIndex = null;
+      renderPocket();
+      inspectPocketItem(index);
+      return;
+    }
+    const selected = state.pocket[selectedPocketIndex];
+    if (selected?.kind === "unit" && selected.glyph === item.glyph && selected.level === item.level) {
+      combinePocketItems(selectedPocketIndex, index);
+      return;
+    }
+    selectedPocketIndex = index;
+    renderPocket();
+    showStatus(`這兩顆不能合體，已改選「${item.glyph}」${item.level} 星。請再點相同文字、相同星級。`);
+  }
+
   function pointerDown(event, source, index) {
     if (!state.running || state.over) return;
+    if (event.isPrimary === false) return;
     const item = dragItem(source, index);
     pointerDrag = {
       pointerId: event.pointerId, source, index, sourceElement: event.currentTarget,
@@ -294,7 +329,6 @@
     };
     if (item) {
       event.preventDefault();
-      event.currentTarget.setPointerCapture?.(event.pointerId);
     }
   }
 
@@ -305,6 +339,7 @@
     const travel = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
     if (!pointerDrag.dragging && travel > 8) {
       pointerDrag.dragging = true;
+      if (pointerDrag.source === "pocket") selectedPocketIndex = null;
       createDragGhost(item);
       pointerDrag.sourceElement.classList.add("drag-source");
       if (pointerDrag.source === "board") showRangeIndicator(item, pointerDrag.index);
@@ -316,7 +351,7 @@
     updateDropTarget(event.clientX, event.clientY);
   }
 
-  function pointerUp(event, fallbackSource, fallbackIndex) {
+  function pointerUp(event) {
     if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
     const drag = { ...pointerDrag };
     if (drag.dragging) {
@@ -336,8 +371,8 @@
       renderBoard();
     } else {
       cleanupPointerDrag();
-      if (fallbackSource === "board") inspectBoardSlot(fallbackIndex);
-      else inspectPocketItem(fallbackIndex);
+      if (drag.source === "board") inspectBoardSlot(drag.index);
+      else tapPocketItem(drag.index);
     }
   }
 
@@ -539,6 +574,7 @@
       const item = state.pocket[index];
       const dragging = pointerDrag?.dragging && pointerDrag.source === "pocket" && pointerDrag.index === index;
       const dropTarget = currentDropTarget?.area === "pocket" && currentDropTarget.index === index;
+      const selected = selectedPocketIndex === index;
       if (!item) {
         slot.className = `pocket-item used${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
         slot.innerHTML = `<span class="glyph">·</span><span class="label">等待刷新</span>`;
@@ -548,9 +584,9 @@
         slot.innerHTML = `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`;
         slot.setAttribute("aria-label", `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
       } else {
-        slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
+        slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}${selected ? " selected" : ""}`;
         slot.innerHTML = `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`;
-        slot.setAttribute("aria-label", `口袋 ${index + 1}，${item.name}，${item.level} 星，可拖曳合體或部署`);
+        slot.setAttribute("aria-label", `口袋 ${index + 1}，${item.name}，${item.level} 星，${selected ? "已選取，" : ""}可點擊或拖曳合體`);
       }
     });
   }
@@ -640,6 +676,9 @@
   renderPocket();
   render();
   dom.refresh.addEventListener("click", refreshPocket);
+  window.addEventListener("pointermove", pointerMove, { passive: false });
+  window.addEventListener("pointerup", pointerUp, { passive: false });
+  window.addEventListener("pointercancel", cancelPointerDrag);
   dom.unitClose.addEventListener("click", closeUnitModal);
   dom.unitModal.addEventListener("click", event => {
     if (event.target === dom.unitModal) closeUnitModal();
