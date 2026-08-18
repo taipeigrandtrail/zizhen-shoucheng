@@ -883,3 +883,259 @@ body.dragging-board .pocket-section {
   .pocket-item { height: 55px; }
   .status { min-height: 30px; }
 }
+
+/* v0.2：五行地圖＋單畫面戰鬥介面 */
+html, body { height: 100%; overflow: hidden; }
+
+.game-shell {
+  height: 100dvh;
+  min-height: 0;
+  padding: max(7px, env(safe-area-inset-top)) 7px calc(7px + var(--safe-bottom));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.game-header {
+  min-height: 30px;
+  margin: 0;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  text-align: left;
+}
+.game-header h1 { margin: 0; font-size: 22px; letter-spacing: .1em; }
+.game-header .eyebrow { order: 2; margin: 0 2px 2px; font-size: 9px; letter-spacing: .08em; }
+
+.stats { min-height: 40px; border-radius: 9px; }
+.stats div { padding: 4px 2px; }
+.stats span { font-size: 9px; }
+.stats strong { margin-top: 1px; font-size: 14px; }
+
+.battle-section {
+  min-height: 0;
+  margin: 0;
+  padding: 4px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+.battle-section .section-heading { margin-bottom: 3px; }
+.battle-section .section-heading h2 { font-size: 12px; }
+.battle-section .section-heading span { font-size: 8px; }
+.battlefield {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+  justify-self: center;
+  aspect-ratio: 3 / 4;
+  border-color: rgba(229, 205, 147, .55);
+  background-image: linear-gradient(rgba(8, 15, 20, .12), rgba(8, 15, 20, .24)), var(--map-art);
+  background-size: cover;
+  background-position: center;
+}
+.battlefield[data-map="metal"] { --route-color: #c59b58; }
+.battlefield[data-map="wood"] { --route-color: #73a96d; }
+.battlefield[data-map="water"] { --route-color: #8dd0dd; }
+.battlefield[data-map="fire"] { --route-color: #f08a56; }
+.battlefield[data-map="earth"] { --route-color: #e0b86f; }
+.route-map path {
+  stroke: var(--route-color, #8aa7af);
+  stroke-width: 4;
+  stroke-dasharray: none;
+  opacity: .9;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.75));
+}
+.entrance {
+  bottom: auto;
+  padding: 2px 4px;
+  transform: translate(-50%, -50%);
+  background: #9f302a;
+  color: #fff;
+  font-size: 7px;
+}
+.flag { transform: translate(-50%, -50%) scale(.8); transform-origin: center; }
+.empty-lane { top: 5%; font-size: 9px; text-shadow: 0 1px 2px #000; }
+.attack-total { margin: 2px 1px 0; font-size: 9px; line-height: 1.1; }
+
+.board, .general-frames {
+  left: 4%;
+  top: 8%;
+  width: 92%;
+  height: 88%;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-rows: repeat(11, minmax(0, 1fr));
+  gap: 2px;
+}
+.slot {
+  padding: 0;
+  border-width: 1px;
+  border-radius: 5px;
+  background: rgba(17, 28, 36, .82);
+  backdrop-filter: blur(1px);
+}
+.slot.filled { background: #f2e7ca; }
+.slot .glyph { font-size: clamp(13px, 4.4vw, 20px); }
+.slot .stars { min-height: 6px; margin-top: 0; font-size: clamp(5px, 1.5vw, 8px); }
+.slot.locked .glyph { font-size: clamp(8px, 2.5vw, 11px); }
+.slot.sleeping-general::after { right: -3px; top: -7px; font-size: clamp(10px, 3vw, 14px); }
+
+.general-frame { border-width: 2px; border-radius: 7px; }
+.general-frame .general-frame-info {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 1px;
+  min-width: 0;
+  padding: 0;
+  transform: none;
+  display: grid;
+  grid-template-rows: 3px 7px;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  line-height: 1;
+}
+.general-frame-info strong { display: none; }
+.general-frame-info > i {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(62, 48, 26, .55);
+}
+.general-frame-info > i > u {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #d89518, #fff0a2);
+  text-decoration: none;
+}
+.general-frame-info > b { color: #75450c; text-align: center; font-size: 6px; font-weight: 800; }
+
+.general-section {
+  min-height: 66px;
+  margin: 0;
+  padding: 4px 7px 9px;
+  border-radius: 11px;
+  background: rgba(15, 30, 35, .96);
+}
+.general-section .section-heading { display: none; }
+.generals { height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; align-items: start; }
+.general-skill {
+  --skill-color: #c59b58;
+  --skill-progress: 100%;
+  position: relative;
+  width: min(100%, 49px);
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 5px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff6da;
+  background: conic-gradient(var(--skill-color) var(--skill-progress), #34454c 0);
+  box-shadow: 0 2px 7px rgba(0,0,0,.5);
+}
+.general-skill::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #172a32;
+}
+.general-skill .skill-glyph { position: relative; z-index: 1; font-family: "DFKai-SB", "BiauKai", serif; font-size: 18px; font-weight: 800; }
+.general-skill small {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 2px);
+  width: 68px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  color: #aebfc2;
+  font-size: 7px;
+  font-weight: 500;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.general-skill.general-guanyu { --skill-color: #61a764; }
+.general-skill.general-zhangfei { --skill-color: #ba8046; }
+.general-skill.general-zhaoyun { --skill-color: #4ca8c5; }
+.general-skill.general-machao { --skill-color: #b8c1c9; }
+.general-skill.general-huangzhong { --skill-color: #e45d43; }
+.general-skill.awake:not(:disabled) { box-shadow: 0 0 0 2px #f1ca67, 0 2px 8px rgba(0,0,0,.55); }
+.general-skill.sleeping { filter: grayscale(.8); opacity: .42; }
+.general-skill:disabled { background: conic-gradient(var(--skill-color) var(--skill-progress), #34454c 0); color: #cdd6d7; }
+
+.pocket-section { min-height: 72px; margin: 0; padding: 5px 6px; border-radius: 10px; }
+.pocket-section .section-heading { margin-bottom: 3px; }
+.pocket-section .section-heading h2 { font-size: 11px; }
+.pocket-section .section-heading span { font-size: 8px; }
+.pocket { gap: 4px; }
+.pocket-item { height: 49px; border-width: 1px; border-radius: 7px; }
+.pocket-item .glyph { font-size: clamp(19px, 6vw, 26px); }
+.pocket-item .label { font-size: 6px; }
+
+.refresh { min-height: 43px; margin: 0; border-width: 1px; border-radius: 10px; font-size: 13px; }
+.status {
+  min-height: 14px;
+  height: 14px;
+  margin: 0;
+  overflow: hidden;
+  color: #9fb2bd;
+  font-size: 9px;
+  line-height: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+footer { display: none; }
+
+.map-picker { margin: 12px 0 0; }
+.map-picker > p { margin: 0 0 6px; color: #91a6b0; text-align: center; font-size: 11px; }
+#map-select { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+#map-select button {
+  min-width: 0;
+  min-height: 52px;
+  padding: 4px 1px;
+  border: 1px solid #405766;
+  border-radius: 8px;
+  background: #12202a;
+  color: #d9e1e4;
+  font-family: "DFKai-SB", "BiauKai", serif;
+  font-size: 18px;
+}
+#map-select button small { display: block; margin-top: 2px; color: #8299a4; font-family: sans-serif; font-size: 7px; }
+#map-select button.selected { border-color: #efc766; background: #4b371b; color: #ffe8a0; box-shadow: 0 0 0 2px rgba(239,199,102,.2); }
+
+.overlay { padding: 12px; }
+.dialog {
+  width: calc(100vw - 24px);
+  max-width: 420px;
+  max-height: calc(100dvh - 24px);
+  padding: 18px 14px;
+  overflow: auto;
+}
+.dialog h2 { margin-bottom: 10px; font-size: 24px; }
+.dialog ol { font-size: 12px; line-height: 1.55; }
+.dialog button#start { min-height: 48px; margin-top: 10px; }
+
+@media (max-height: 740px) {
+  .game-shell { padding-top: max(4px, env(safe-area-inset-top)); gap: 3px; }
+  .game-header { min-height: 25px; }
+  .game-header h1 { font-size: 19px; }
+  .stats { min-height: 34px; }
+  .stats div { padding: 2px; }
+  .general-section { min-height: 58px; }
+  .general-skill { width: 43px; }
+  .pocket-section { min-height: 64px; }
+  .pocket-item { height: 43px; }
+  .refresh { min-height: 38px; }
+  .status { min-height: 11px; height: 11px; line-height: 11px; }
+}
