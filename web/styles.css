@@ -1379,13 +1379,37 @@ footer { display: none; }
   filter: drop-shadow(0 0 8px rgba(99, 240, 120, .62));
   animation: painted-charge 1.42s cubic-bezier(.12,.72,.24,1) forwards;
 }
-.general-skill-fx.zhaoyun .skill-art {
+.general-skill-fx.zhaoyun .dragon-swim {
+  position: absolute;
   left: -112%;
   top: 30%;
   width: 132%;
+  aspect-ratio: 2 / 1;
   filter: drop-shadow(0 0 9px rgba(64,190,255,.72));
-  animation: zhaoyun-dragon-pass 1.68s cubic-bezier(.16,.64,.25,1) forwards;
+  animation: zhaoyun-dragon-pass 1.46s linear forwards;
+  will-change: transform, opacity;
 }
+.dragon-swim .dragon-segment {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: dragon-body-wave .34s ease-in-out infinite alternate;
+  animation-delay: var(--wave-delay);
+  will-change: transform;
+}
+.dragon-swim .dragon-segment img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.dragon-swim .segment-1 { --wave-y: 8px; --wave-tilt: 1.5deg; --wave-delay: -.30s; clip-path: inset(0 84% 0 0); }
+.dragon-swim .segment-2 { --wave-y: 7px; --wave-tilt: 1.25deg; --wave-delay: -.25s; clip-path: inset(0 70% 0 14%); }
+.dragon-swim .segment-3 { --wave-y: 6px; --wave-tilt: 1deg; --wave-delay: -.20s; clip-path: inset(0 56% 0 28%); }
+.dragon-swim .segment-4 { --wave-y: 5px; --wave-tilt: .8deg; --wave-delay: -.15s; clip-path: inset(0 42% 0 42%); }
+.dragon-swim .segment-5 { --wave-y: 4px; --wave-tilt: .6deg; --wave-delay: -.10s; clip-path: inset(0 28% 0 56%); }
+.dragon-swim .segment-6 { --wave-y: 3px; --wave-tilt: .4deg; --wave-delay: -.05s; clip-path: inset(0 14% 0 70%); }
+.dragon-swim .segment-7 { --wave-y: 2px; --wave-tilt: .2deg; --wave-delay: 0s; clip-path: inset(0 0 0 84%); }
 .general-skill-fx.machao .skill-art { top: 29%; filter: drop-shadow(0 0 8px rgba(231,238,242,.72)); animation-duration: 1.25s; }
 .general-skill-fx.zhangfei .skill-art {
   left: 50%;
@@ -1432,11 +1456,15 @@ footer { display: none; }
 }
 @keyframes zhaoyun-dragon-pass {
   0% { transform: translateX(0) scale(.78); opacity: 0; }
-  10% { opacity: 1; }
-  24% { transform: translateX(14%) scale(.92); opacity: 1; }
-  64% { transform: translateX(52%) scale(1); opacity: 1; }
-  82% { transform: translateX(72%) scale(1.03); opacity: 1; }
-  100% { transform: translateX(108%) scale(1.08); opacity: 0; }
+  8% { opacity: 1; }
+  22% { transform: translateX(18%) scale(.92); opacity: 1; }
+  52% { transform: translateX(50%) scale(1); opacity: 1; }
+  80% { transform: translateX(79%) scale(1.02); opacity: 1; }
+  100% { transform: translateX(108%) scale(1.04); opacity: 0; }
+}
+@keyframes dragon-body-wave {
+  from { transform: translateY(calc(-1 * var(--wave-y))) rotate(calc(-1 * var(--wave-tilt))); }
+  to { transform: translateY(var(--wave-y)) rotate(var(--wave-tilt)); }
 }
 @keyframes painted-quake {
   0% { transform: translate(-50%, -50%) scale(.15) rotate(-10deg); opacity: 0; }
