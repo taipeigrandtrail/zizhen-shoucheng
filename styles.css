@@ -1389,15 +1389,37 @@ footer { display: none; }
   top: 30%;
   width: 132%;
   aspect-ratio: 2 / 1;
-  filter: drop-shadow(0 0 9px rgba(64,190,255,.72));
-  animation: zhaoyun-dragon-pass 1.46s linear forwards;
+  filter: brightness(1.12) drop-shadow(0 0 12px rgba(50,203,255,.9));
+  animation: zhaoyun-dragon-pass 1.15s linear forwards;
   will-change: transform, opacity;
+}
+.general-skill-fx.zhaoyun .dragon-swim::before,
+.general-skill-fx.zhaoyun .dragon-swim::after {
+  content: "";
+  position: absolute;
+  left: 4%;
+  top: 45%;
+  z-index: 0;
+  width: 62%;
+  height: 4px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(38,157,255,.25), rgba(185,244,255,.95));
+  filter: blur(3px) drop-shadow(0 0 7px #24bfff);
+  animation: dragon-speed-trail .2s ease-in-out infinite alternate;
+}
+.general-skill-fx.zhaoyun .dragon-swim::after {
+  top: 58%;
+  width: 53%;
+  height: 2px;
+  opacity: .72;
+  animation-delay: -.1s;
 }
 .dragon-swim .dragon-segment {
   position: absolute;
   inset: 0;
   display: block;
-  animation: dragon-body-wave .34s ease-in-out infinite alternate;
+  z-index: 1;
+  animation: dragon-body-wave .23s ease-in-out infinite alternate;
   animation-delay: var(--wave-delay);
   will-change: transform;
 }
@@ -1407,12 +1429,12 @@ footer { display: none; }
   height: 100%;
   object-fit: fill;
 }
-.dragon-swim .segment-1 { --wave-y: 8px; --wave-tilt: 1.5deg; --wave-delay: -.30s; clip-path: inset(0 84% 0 0); }
-.dragon-swim .segment-2 { --wave-y: 7px; --wave-tilt: 1.25deg; --wave-delay: -.25s; clip-path: inset(0 70% 0 14%); }
-.dragon-swim .segment-3 { --wave-y: 6px; --wave-tilt: 1deg; --wave-delay: -.20s; clip-path: inset(0 56% 0 28%); }
-.dragon-swim .segment-4 { --wave-y: 5px; --wave-tilt: .8deg; --wave-delay: -.15s; clip-path: inset(0 42% 0 42%); }
-.dragon-swim .segment-5 { --wave-y: 4px; --wave-tilt: .6deg; --wave-delay: -.10s; clip-path: inset(0 28% 0 56%); }
-.dragon-swim .segment-6 { --wave-y: 3px; --wave-tilt: .4deg; --wave-delay: -.05s; clip-path: inset(0 14% 0 70%); }
+.dragon-swim .segment-1 { --wave-y: 10px; --wave-tilt: 1.7deg; --wave-delay: -.21s; clip-path: inset(0 84% 0 0); }
+.dragon-swim .segment-2 { --wave-y: 8px; --wave-tilt: 1.4deg; --wave-delay: -.175s; clip-path: inset(0 70% 0 14%); }
+.dragon-swim .segment-3 { --wave-y: 7px; --wave-tilt: 1.15deg; --wave-delay: -.14s; clip-path: inset(0 56% 0 28%); }
+.dragon-swim .segment-4 { --wave-y: 6px; --wave-tilt: .9deg; --wave-delay: -.105s; clip-path: inset(0 42% 0 42%); }
+.dragon-swim .segment-5 { --wave-y: 5px; --wave-tilt: .65deg; --wave-delay: -.07s; clip-path: inset(0 28% 0 56%); }
+.dragon-swim .segment-6 { --wave-y: 3px; --wave-tilt: .4deg; --wave-delay: -.035s; clip-path: inset(0 14% 0 70%); }
 .dragon-swim .segment-7 { --wave-y: 2px; --wave-tilt: .2deg; --wave-delay: 0s; clip-path: inset(0 0 0 84%); }
 .general-skill-fx.machao .skill-art {
   left: -118%;
@@ -1483,15 +1505,30 @@ footer { display: none; }
 }
 @keyframes zhaoyun-dragon-pass {
   0% { transform: translateX(0) scale(.78); opacity: 0; }
-  8% { opacity: 1; }
-  22% { transform: translateX(18%) scale(.92); opacity: 1; }
-  52% { transform: translateX(50%) scale(1); opacity: 1; }
-  80% { transform: translateX(79%) scale(1.02); opacity: 1; }
-  100% { transform: translateX(108%) scale(1.04); opacity: 0; }
+  6% { opacity: 1; }
+  20% { transform: translateX(21%) scale(.94); opacity: 1; }
+  48% { transform: translateX(53%) scale(1.06); opacity: 1; }
+  77% { transform: translateX(84%) scale(1.08); opacity: 1; }
+  100% { transform: translateX(108%) scale(1.1); opacity: 0; }
 }
 @keyframes dragon-body-wave {
   from { transform: translateY(calc(-1 * var(--wave-y))) rotate(calc(-1 * var(--wave-tilt))); }
   to { transform: translateY(var(--wave-y)) rotate(var(--wave-tilt)); }
+}
+@keyframes dragon-speed-trail {
+  from { transform: translateX(-8px) scaleX(.86); opacity: .45; }
+  to { transform: translateX(5px) scaleX(1.08); opacity: 1; }
+}
+@keyframes zhaoyun-field-impact {
+  0%, 100% { filter: brightness(1); transform: translateX(0); }
+  12% { filter: brightness(1.45); transform: translateX(-2px); }
+  22% { transform: translateX(3px); }
+  34% { transform: translateX(-3px); }
+  48% { filter: brightness(1.25); transform: translateX(2px); }
+  68% { transform: translateX(-1px); }
+}
+.battlefield.skill-casting.skill-zhaoyun {
+  animation: zhaoyun-field-impact 1.15s ease-out;
 }
 @keyframes painted-quake {
   0% { transform: translate(-50%, -50%) scale(.15) rotate(-10deg); opacity: 0; }
