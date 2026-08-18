@@ -613,7 +613,7 @@
   }
 
   function activeGeneralFormations() {
-    const formations = [];
+    const candidates = [];
     GENERAL_TYPES.forEach(general => {
       const first = [];
       const second = [];
@@ -639,11 +639,15 @@
           state.units[firstIndex].generalXp ?? 0,
           state.units[secondIndex].generalXp ?? 0
         );
-        formations.push({ ...general, indexes: [firstIndex, secondIndex], orientation, level, xp,
+        candidates.push({ ...general, indexes: [firstIndex, secondIndex], orientation, level, xp,
           key: `${general.id}-${sorted[0]}-${sorted[1]}` });
       });
     });
-    return formations;
+    return GENERAL_TYPES.flatMap(general => {
+      const sameName = candidates.filter(formation => formation.id === general.id);
+      const existing = sameName.find(formation => state.activeGeneralKeys.has(formation.key));
+      return existing ? [existing] : sameName.slice(0, 1);
+    });
   }
 
   function syncGeneralFormations(formations) {
@@ -891,6 +895,8 @@
       const unit = state.units[index];
       const classes = ["slot", unlocked ? (unit ? "filled" : "empty") : "locked"];
       const linkedGeneral = linked.get(index);
+      const standbyGeneral = Boolean(unit?.generalId && !linkedGeneral
+        && formations.some(formation => formation.id === unit.generalId));
       if (attackingSlots.has(index) && !linkedGeneral) classes.push("attacking", `attack-${unitAttackKind(unit)}`);
       if (linkedGeneral) classes.push("general-linked", linkedGeneral.orientation,
         generalPartClass(linkedGeneral, index), `general-${linkedGeneral.id}`);
@@ -907,7 +913,9 @@
         const level = linkedGeneral?.level ?? unit.level;
         slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`;
         slot.setAttribute("aria-label", unit.generalId && !linkedGeneral
-          ? `${unit.name}，${level} 星，沉睡中，必須與另一個武將字相鄰才能攻擊`
+          ? standbyGeneral
+            ? `${unit.name}，${level} 星，沉睡中；同名武將已有一組甦醒，不能攻擊`
+            : `${unit.name}，${level} 星，沉睡中，必須與另一個武將字相鄰才能攻擊`
           : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
       } else {
         slot.innerHTML = `<span class="glyph">＋</span><span class="stars"></span>`;
@@ -925,7 +933,7 @@
   }
 
   function renderGeneralFrames(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}-${attackingGeneralKeys.has(formation.key)}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${attackingGeneralKeys.has(formation.key)}`).join("|");
     if (dom.generalFrames.dataset.signature === signature) return;
     dom.generalFrames.innerHTML = formations.map(formation => {
       const positions = formation.indexes.map(index => SLOT_LAYOUT[index]);
@@ -936,14 +944,13 @@
       return `<div class="general-frame ${formation.orientation} general-${formation.id}${attackingGeneralKeys.has(formation.key) ? " attacking" : ""}"
         style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
         <span>${formation.name}・${"★".repeat(formation.level)}</span>
-        <div class="general-frame-xp"><i style="width:${generalXpPercent(formation)}%"></i></div>
       </div>`;
     }).join("");
     dom.generalFrames.dataset.signature = signature;
   }
 
   function renderGenerals(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
     if (!formations.length) {
       if (dom.generals.dataset.signature !== "empty") {
         dom.generals.innerHTML = `<p class="general-empty">尚未組成武將：武將字必須上下或左右相鄰，斜角不算。</p>`;
@@ -955,7 +962,6 @@
       dom.generals.innerHTML = formations.map(formation => `<article class="general-card ${formation.id}" data-general-card-key="${formation.key}">
         <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}・${"★".repeat(formation.level)}</strong><small>${formation.passive}</small></span></div>
         <button class="general-skill" type="button" data-general-key="${formation.key}">${formation.skill}</button>
-        <div class="general-xp"><span><i style="width:${generalXpPercent(formation)}%"></i></span><small>${formation.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${formation.xp}/${generalXpNeeded(formation.level)}`}</small></div>
         <p>${formation.skillNote}</p>
       </article>`).join("");
       dom.generals.dataset.signature = signature;
@@ -1129,6 +1135,7 @@
       ? formations.find(formation => formation.indexes.includes(index))
       : null;
     const sleeping = Boolean(unit.generalId && !linkedGeneral);
+    const standbyGeneral = Boolean(sleeping && formations.some(formation => formation.id === unit.generalId));
     const stats = linkedGeneral ? generalCombatStats(linkedGeneral, formations) : combatStats(unit, formations, index);
     const xpDetail = linkedGeneral
       ? `<div class="unit-general-xp"><span><i style="width:${generalXpPercent(linkedGeneral)}%"></i></span><strong>${linkedGeneral.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${linkedGeneral.xp}/${generalXpNeeded(linkedGeneral.level)}`}</strong></div>`
@@ -1145,7 +1152,9 @@
       <p class="unit-card-note">${linkedGeneral
         ? `${linkedGeneral.passive}。擊殺敵軍會獲得經驗；把相同單字拖到對應文字也能增加經驗。拖走其中一字即可拆陣。`
         : unit.generalId
-          ? `💤 沉睡中，單字不能攻擊；${unit.role}。上下或左右相鄰才會甦醒成將，斜角不算。`
+          ? standbyGeneral
+            ? `💤 同名武將已有一組甦醒，因此這個文字維持沉睡、不能攻擊；可餵給已甦醒的武將增加經驗。`
+            : `💤 沉睡中，單字不能攻擊；${unit.role}。上下或左右相鄰才會甦醒成將，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
     showRangeIndicator(unit, index);
     dom.unitModal.classList.remove("hidden");

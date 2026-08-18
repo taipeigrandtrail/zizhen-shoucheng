@@ -299,25 +299,6 @@ button { font: inherit; }
   font-weight: 900;
   line-height: 1.2;
 }
-.general-frame-xp {
-  position: absolute;
-  left: 5px;
-  right: 5px;
-  top: 4px;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: rgba(79,48,15,.55);
-  box-shadow: 0 0 0 1px rgba(255,236,170,.28);
-}
-.general-frame-xp i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #f2b93d, #fff0a0);
-  box-shadow: 0 0 6px #ffd45f;
-  transition: width .3s ease;
-}
 .slot.sleeping-general { border-color: #6f7c83; background: #d8d3bd; color: #625f57; }
 .slot.sleeping-general::after {
   content: "💤";
@@ -688,14 +669,6 @@ button { font: inherit; }
 }
 .general-skill:disabled { border-color: #40555b; background: #2b3b40; color: #799097; }
 .general-card > p { grid-column: 1 / -1; margin: 0; color: #718f91; font-size: 9px; }
-.general-xp {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 7px;
-}
-.general-xp > span,
 .unit-general-xp > span {
   display: block;
   height: 7px;
@@ -704,7 +677,6 @@ button { font: inherit; }
   border-radius: 99px;
   background: #172329;
 }
-.general-xp i,
 .unit-general-xp i {
   display: block;
   height: 100%;
@@ -713,7 +685,6 @@ button { font: inherit; }
   box-shadow: 0 0 8px rgba(255,208,83,.72);
   transition: width .3s ease;
 }
-.general-xp small { color: #e5c46c; font-size: 9px; white-space: nowrap; }
 
 .pocket-section {
   margin-top: 10px;

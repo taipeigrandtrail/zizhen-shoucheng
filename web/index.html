@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="字陣守城">
   <title>字陣守城｜公開測試版</title>
-  <link rel="stylesheet" href="styles.css?v=15">
+  <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
   <main class="game-shell" aria-label="字陣守城遊戲">
@@ -49,7 +49,7 @@
     <section class="general-section" aria-labelledby="general-title">
       <div class="section-heading">
         <h2 id="general-title">武將字陣</h2>
-        <span>擊殺敵軍或餵相同文字可獲得經驗</span>
+        <span>同名武將僅一組能甦醒</span>
       </div>
       <div id="generals" class="generals" aria-live="polite">
         <p class="general-empty">尚未組成武將：試著把「趙」與「雲」放在一起。</p>
@@ -80,7 +80,7 @@
         <li>花 10 個饅頭刷新，口袋會出現 5 個文字或道具。</li>
         <li>一般兵字可用相同文字合體；武將單字不能升級，也不能攻擊。</li>
         <li>把鏟子拖到鎖定格可以開地；戰鬥棋子也能拖回口袋空格。</li>
-        <li>姓名兩字相鄰可組成武將；擊殺敵軍或餵相同文字會增加經驗，經驗滿才升級。</li>
+        <li>同名武將文字都能上場，但僅第一組會甦醒成將；其他同名文字保持沉睡。</li>
       </ol>
       <p id="dialog-detail" class="dialog-detail"></p>
       <button id="start" type="button">開始守城</button>
@@ -94,6 +94,6 @@
     </section>
   </div>
 
-  <script src="app.js?v=15" defer></script>
+  <script src="app.js?v=16" defer></script>
 </body>
 </html>
