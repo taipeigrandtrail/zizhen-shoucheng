@@ -8,18 +8,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="字陣守城">
   <title>字陣守城｜公開測試版</title>
-  <link rel="stylesheet" href="styles.css?v=19">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <main class="game-shell" aria-label="字陣守城遊戲">
     <header class="game-header">
-      <p class="eyebrow">PUBLIC TEST v0.1</p>
+      <p class="eyebrow">守字人・<span id="map-name">鑄鐵關</span></p>
       <h1>字陣守城</h1>
-      <p>刷新口袋・布置字陣・守住軍旗</p>
     </header>
 
     <section class="stats" aria-label="遊戲狀態">
-      <div><span>饅頭</span><strong id="food">30</strong></div>
+      <div><span>軍餉</span><strong id="food">30</strong></div>
       <div><span>波次</span><strong id="wave">1/10</strong></div>
       <div><span>城防</span><strong id="base">❤❤❤</strong></div>
       <div><span>敵軍</span><strong id="enemy-count">5</strong></div>
@@ -32,27 +31,27 @@
       </div>
       <div class="battlefield">
         <svg class="route-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M 24 88 L 23 73 L 12 73 L 12 50 L 23 50 L 23 27 L 34 27 L 34 12 L 66 12 L 66 38 L 77 38 L 77 73 L 88 73 L 88 88" />
+          <path id="route-path" d="" />
         </svg>
-        <span class="entrance" aria-hidden="true">入口</span>
+        <span id="entrance" class="entrance" aria-hidden="true">入口</span>
         <div id="range-indicator" class="range-indicator" aria-hidden="true"></div>
         <div id="board" class="board" role="grid" aria-label="二十四格文字兵棋盤"></div>
         <div id="general-frames" class="general-frames" aria-hidden="true"></div>
         <div id="attack-fx" class="attack-fx" aria-hidden="true"></div>
         <div id="enemies" class="enemy-track" aria-live="polite"></div>
         <div id="empty-lane" class="empty-lane">下一批敵軍正在接近……</div>
-        <div class="flag" aria-label="我方軍旗"><span>旗</span><i></i></div>
+        <div id="flag" class="flag" aria-label="我方軍旗"><span>旗</span><i></i></div>
       </div>
       <p class="attack-total">預估每秒傷害：<strong id="attack">0</strong>　點文字看屬性</p>
     </section>
 
     <section class="general-section" aria-labelledby="general-title">
       <div class="section-heading">
-        <h2 id="general-title">武將字陣</h2>
-        <span>同名武將僅一組能甦醒</span>
+        <h2 id="general-title">武將技能</h2>
+        <span>固定五格・冷卻環不位移</span>
       </div>
       <div id="generals" class="generals" aria-live="polite">
-        <p class="general-empty">尚未組成武將：試著把「趙」與「雲」放在一起。</p>
+        <p class="general-empty">尚未組成武將</p>
       </div>
     </section>
 
@@ -64,7 +63,7 @@
       <div id="pocket" class="pocket" aria-label="五格口袋"></div>
     </section>
 
-    <button id="refresh" class="refresh" type="button">刷新口袋（10 饅頭）</button>
+    <button id="refresh" class="refresh" type="button">刷新口袋（10 軍餉）</button>
     <p id="status" class="status" aria-live="polite">準備開始守城。</p>
 
     <footer>
@@ -77,11 +76,21 @@
       <p class="dialog-tag">第一次試玩</p>
       <h2 id="dialog-title">守住 10 波敵軍</h2>
       <ol id="dialog-list">
-        <li>花 10 個饅頭刷新；文字可直接拖到戰鬥格，或先點文字再點格子部署。</li>
+        <li>花 10 個軍餉刷新；文字可直接拖到戰鬥格，或先點文字再點格子部署。</li>
         <li>一般兵字可用相同文字合體；武將單字不能升級，也不能攻擊。</li>
         <li>把鏟子拖到鎖定格可以開地；口袋文字拖到不同戰鬥文字上可以交換。</li>
         <li>同名武將文字都能上場，但僅第一組會甦醒成將；其他同名文字保持沉睡。</li>
       </ol>
+      <div class="map-picker" aria-label="選擇五行地圖">
+        <p>選擇地圖</p>
+        <div id="map-select">
+          <button class="selected" type="button" data-map-id="metal">金<br><small>鑄鐵關</small></button>
+          <button type="button" data-map-id="wood">木<br><small>青藤林</small></button>
+          <button type="button" data-map-id="water">水<br><small>水澤道</small></button>
+          <button type="button" data-map-id="fire">火<br><small>火裂谷</small></button>
+          <button type="button" data-map-id="earth">土<br><small>土城關</small></button>
+        </div>
+      </div>
       <p id="dialog-detail" class="dialog-detail"></p>
       <button id="start" type="button">開始守城</button>
     </section>
@@ -94,6 +103,6 @@
     </section>
   </div>
 
-  <script src="app.js?v=19" defer></script>
+  <script src="app.js?v=20" defer></script>
 </body>
 </html>

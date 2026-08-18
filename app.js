@@ -2,8 +2,12 @@
   "use strict";
 
   const BOARD_SIZE = 24;
-  const BOARD_COLUMNS = 6;
-  const BOARD_ROWS = 6;
+  const BOARD_COLUMNS = 9;
+  const BOARD_ROWS = 11;
+  const BOARD_LEFT = 4;
+  const BOARD_TOP = 8;
+  const BOARD_WIDTH = 92;
+  const BOARD_HEIGHT = 88;
   const POCKET_SIZE = 5;
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
@@ -14,7 +18,7 @@
   const GENERAL_XP_PER_KILL = 1;
   const GENERAL_XP_PER_WORD = 3;
   const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
-  const INITIAL_UNLOCKED = new Set([6, 7, 11, 12, 16, 17]);
+  const INITIAL_UNLOCKED = new Set([0, 1, 2, 3, 4, 5]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
     { kind: "unit", glyph: "槍", weapon: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeRadius: 39, rangeLabel: "中", effect: "穿透", role: "中距穿透" },
@@ -22,50 +26,60 @@
     { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeRadius: 29, rangeLabel: "近", effect: "範圍", role: "近距範圍" }
   ];
   const GENERAL_TYPES = [
-    { id: "zhaoyun", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25,
-      passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "重創最接近軍旗的 3 名敵軍" },
-    { id: "guanyu", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2,
-      passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "劈斬戰場上所有敵軍" },
-    { id: "huangzhong", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25,
-      passive: "弓兵攻擊速度 +25%", skill: "百步穿楊", cooldown: 11, skillNote: "箭雨攻擊戰場上所有敵軍" }
+    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2,
+      passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "綠龍咆哮，劈斬戰場上所有敵軍" },
+    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22,
+      passive: "槍兵攻擊力 +22%", skill: "咆哮震陣", cooldown: 15, skillNote: "震擊戰場上所有敵軍" },
+    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25,
+      passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "藍龍穿陣，重創最接近軍旗的 3 名敵軍" },
+    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25,
+      passive: "騎兵、槍兵攻擊速度 +25%", skill: "鐵騎衝陣", cooldown: 13, skillNote: "金系鐵騎衝擊最前方 5 名敵軍" },
+    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25,
+      passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
   const GENERAL_PARTS = [
     { kind: "unit", glyph: "趙", weapon: "槍", generalId: "zhaoyun", name: "武將字・趙", damage: 10, attackSpeed: 0.9, rangeRadius: 41, rangeLabel: "中", effect: "穿透", role: "與「雲」相鄰可成將", attackKind: "spear" },
     { kind: "unit", glyph: "雲", weapon: "槍", generalId: "zhaoyun", name: "武將字・雲", damage: 8, attackSpeed: 1.05, rangeRadius: 38, rangeLabel: "中", effect: "單體", role: "與「趙」相鄰可成將", attackKind: "spear" },
     { kind: "unit", glyph: "關", weapon: "刀", generalId: "guanyu", name: "武將字・關", damage: 13, attackSpeed: 0.72, rangeRadius: 30, rangeLabel: "近", effect: "單體", role: "與「羽」相鄰可成將", attackKind: "blade" },
     { kind: "unit", glyph: "羽", weapon: "騎", generalId: "guanyu", name: "武將字・羽", damage: 11, attackSpeed: 0.88, rangeRadius: 34, rangeLabel: "近", effect: "範圍", role: "與「關」相鄰可成將", attackKind: "cavalry" },
+    { kind: "unit", glyph: "張", weapon: "槍", generalId: "zhangfei", name: "武將字・張", damage: 12, attackSpeed: 0.78, rangeRadius: 36, rangeLabel: "中", effect: "穿透", role: "與「飛」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "飛", weapon: "槍", generalId: "zhangfei", name: "武將字・飛", damage: 10, attackSpeed: 0.9, rangeRadius: 35, rangeLabel: "中", effect: "單體", role: "與「張」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "馬", weapon: "騎", generalId: "machao", name: "武將字・馬", damage: 13, attackSpeed: 0.82, rangeRadius: 33, rangeLabel: "近", effect: "範圍", role: "與「超」相鄰可成將", attackKind: "cavalry" },
+    { kind: "unit", glyph: "超", weapon: "槍", generalId: "machao", name: "武將字・超", damage: 12, attackSpeed: 0.92, rangeRadius: 38, rangeLabel: "中", effect: "穿透", role: "與「馬」相鄰可成將", attackKind: "spear" },
     { kind: "unit", glyph: "黃", weapon: "弓", generalId: "huangzhong", name: "武將字・黃", damage: 7, attackSpeed: 1.35, rangeRadius: 52, rangeLabel: "遠", effect: "單體", role: "與「忠」相鄰可成將", attackKind: "bow" },
     { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeRadius: 48, rangeLabel: "遠", effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" }
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
-  const SLOT_LAYOUT = [
-    [3, 1], [4, 1],
-    [2, 2], [3, 2], [4, 2],
-    [2, 3], [3, 3], [4, 3], [5, 3],
-    [1, 4], [2, 4], [3, 4], [4, 4], [5, 4],
-    [1, 5], [2, 5], [3, 5], [4, 5], [5, 5],
-    [2, 6], [3, 6], [4, 6], [5, 6], [6, 6]
+  const MAP_TYPES = [
+    { id: "metal", element: "金", name: "鑄鐵關", background: "assets/maps/metal-forge.jpg",
+      route: [[1,10],[5,10],[5,8],[2,8],[2,6],[7,6],[7,4],[4,4],[4,2],[8,2],[8,1]],
+      slots: [[2,5],[3,5],[4,5],[5,5],[6,5],[8,5],[4,1],[9,1],[3,3],[5,3],[6,3],[7,3],[8,3],[1,7],[3,7],[4,7],[5,7],[6,7],[7,7],[1,9],[2,9],[3,9],[4,9],[6,10]] },
+    { id: "wood", element: "木", name: "青藤林", background: "assets/maps/wood-grove.jpg",
+      route: [[5,11],[5,9],[2,9],[2,6],[4,6],[4,2],[6,2],[6,6],[8,6],[8,2],[9,2],[9,1]],
+      slots: [[1,7],[3,7],[4,7],[6,7],[7,7],[8,7],[4,1],[5,1],[6,1],[8,1],[5,3],[9,3],[2,5],[5,5],[7,5],[2,10],[3,10],[4,10],[6,10],[6,11],[5,4],[7,4],[1,8],[5,8]] },
+    { id: "water", element: "水", name: "水澤道", background: "assets/maps/water-marsh.jpg",
+      route: [[1,11],[5,11],[5,9],[8,9],[8,7],[3,7],[3,5],[7,5],[7,3],[9,3],[9,1]],
+      slots: [[2,6],[4,6],[5,6],[6,6],[7,6],[8,6],[3,4],[8,4],[9,4],[3,8],[4,8],[5,8],[6,8],[7,8],[1,10],[2,10],[3,10],[4,10],[6,10],[8,1],[7,2],[8,2],[9,9],[6,11]] },
+    { id: "fire", element: "火", name: "火裂谷", background: "assets/maps/fire-rift.jpg",
+      route: [[1,10],[6,10],[6,8],[3,8],[3,6],[8,6],[8,4],[4,4],[4,2],[9,2],[9,1]],
+      slots: [[3,5],[4,5],[5,5],[6,5],[7,5],[9,5],[4,1],[8,1],[5,3],[6,3],[7,3],[8,3],[9,3],[4,7],[5,7],[6,7],[7,7],[8,7],[1,9],[3,9],[5,9],[2,9],[4,9],[7,10]] },
+    { id: "earth", element: "土", name: "土城關", background: "assets/maps/earth-fortress.jpg",
+      route: [[1,10],[4,10],[4,8],[1,8],[1,6],[6,6],[6,4],[3,4],[3,2],[9,2],[9,1]],
+      slots: [[1,5],[2,5],[3,5],[4,5],[5,5],[7,5],[3,1],[7,1],[8,1],[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[2,7],[3,7],[4,7],[5,7],[6,7],[1,9],[3,9],[2,9],[5,10]] }
   ];
-
-  const ROUTE_POINTS = [
-    { x: 24, y: 88 }, { x: 23, y: 73 }, { x: 12, y: 73 },
-    { x: 12, y: 50 }, { x: 23, y: 50 }, { x: 23, y: 27 },
-    { x: 34, y: 27 }, { x: 34, y: 12 }, { x: 66, y: 12 },
-    { x: 66, y: 38 }, { x: 77, y: 38 }, { x: 77, y: 73 },
-    { x: 88, y: 73 }, { x: 88, y: 88 }
-  ];
-  const ROUTE_SEGMENTS = ROUTE_POINTS.slice(0, -1).map((point, index) => ({
-    from: point,
-    to: ROUTE_POINTS[index + 1],
-    length: Math.hypot(ROUTE_POINTS[index + 1].x - point.x, ROUTE_POINTS[index + 1].y - point.y)
-  }));
-  const ROUTE_LENGTH = ROUTE_SEGMENTS.reduce((sum, segment) => sum + segment.length, 0);
+  let selectedMapId = "metal";
+  let SLOT_LAYOUT = MAP_TYPES[0].slots;
+  let ROUTE_POINTS = [];
+  let ROUTE_SEGMENTS = [];
+  let ROUTE_LENGTH = 0;
 
   const dom = {
     food: document.querySelector("#food"), wave: document.querySelector("#wave"),
     base: document.querySelector("#base"), enemyCount: document.querySelector("#enemy-count"),
     attack: document.querySelector("#attack"), enemies: document.querySelector("#enemies"),
     emptyLane: document.querySelector("#empty-lane"), battlefield: document.querySelector(".battlefield"),
+    routePath: document.querySelector("#route-path"), entrance: document.querySelector("#entrance"),
+    flag: document.querySelector("#flag"), mapName: document.querySelector("#map-name"),
     board: document.querySelector("#board"), generalFrames: document.querySelector("#general-frames"),
     attackFx: document.querySelector("#attack-fx"),
     pocket: document.querySelector("#pocket"), rangeIndicator: document.querySelector("#range-indicator"),
@@ -73,6 +87,7 @@
     generals: document.querySelector("#generals"),
     overlay: document.querySelector("#overlay"), dialogTitle: document.querySelector("#dialog-title"),
     dialogList: document.querySelector("#dialog-list"), dialogDetail: document.querySelector("#dialog-detail"),
+    mapSelect: document.querySelector("#map-select"),
     start: document.querySelector("#start"), unitModal: document.querySelector("#unit-modal"),
     unitClose: document.querySelector("#unit-close"), unitCardContent: document.querySelector("#unit-card-content")
   };
@@ -87,13 +102,49 @@
   const attackingSlots = new Set();
   const attackingGeneralKeys = new Set();
 
+  function currentMap() {
+    return MAP_TYPES.find(map => map.id === selectedMapId) ?? MAP_TYPES[0];
+  }
+
+  function gridPointToPercent([column, row]) {
+    return {
+      x: BOARD_LEFT + (column - 0.5) * (BOARD_WIDTH / BOARD_COLUMNS),
+      y: BOARD_TOP + (row - 0.5) * (BOARD_HEIGHT / BOARD_ROWS)
+    };
+  }
+
+  function applySelectedMap() {
+    const map = currentMap();
+    SLOT_LAYOUT = map.slots;
+    ROUTE_POINTS = map.route.map(gridPointToPercent);
+    ROUTE_SEGMENTS = ROUTE_POINTS.slice(0, -1).map((point, index) => ({
+      from: point,
+      to: ROUTE_POINTS[index + 1],
+      length: Math.hypot(ROUTE_POINTS[index + 1].x - point.x, ROUTE_POINTS[index + 1].y - point.y)
+    }));
+    ROUTE_LENGTH = ROUTE_SEGMENTS.reduce((sum, segment) => sum + segment.length, 0);
+    dom.routePath.setAttribute("d", ROUTE_POINTS.map((point, index) => `${index ? "L" : "M"} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join(" "));
+    dom.battlefield.dataset.map = map.id;
+    dom.battlefield.style.setProperty("--map-art", `url("${map.background}")`);
+    dom.mapName.textContent = `${map.element}・${map.name}`;
+    const start = ROUTE_POINTS[0];
+    const goal = ROUTE_POINTS.at(-1);
+    dom.entrance.style.left = `${start.x}%`;
+    dom.entrance.style.top = `${start.y}%`;
+    dom.flag.style.left = `${goal.x}%`;
+    dom.flag.style.top = `${goal.y}%`;
+    [...dom.mapSelect.querySelectorAll("[data-map-id]")].forEach(button => {
+      button.classList.toggle("selected", button.dataset.mapId === map.id);
+    });
+  }
+
   function freshState() {
     const unlocked = Array(BOARD_SIZE).fill(false);
     INITIAL_UNLOCKED.forEach(index => { unlocked[index] = true; });
     return {
       units: Array(BOARD_SIZE).fill(null), unlocked, pocket: Array(POCKET_SIZE).fill(null), enemies: [],
       food: 30, baseHealth: 3, wave: 1, wavePending: enemyCountForWave(1), defeated: 0,
-      refreshCount: 0, passiveClock: 0, spawnClock: 0, intermission: 0,
+      refreshCount: 0, spawnClock: 0, intermission: 0,
       generalCooldowns: {}, activeGeneralKeys: new Set(),
       running: false, over: false, won: false
     };
@@ -134,6 +185,8 @@
   }
 
   function startGame() {
+    applySelectedMap();
+    buildBoard();
     state = freshState();
     selectedPocketIndex = null;
     state.running = true;
@@ -152,15 +205,10 @@
     if (!state.running) return;
     const delta = Math.min((now - lastFrame) / 1000, 0.1);
     lastFrame = now;
-    state.passiveClock += delta;
     state.spawnClock += delta;
     Object.keys(state.generalCooldowns).forEach(key => {
       state.generalCooldowns[key] = Math.max(0, state.generalCooldowns[key] - delta);
     });
-    if (state.passiveClock >= 1.5) {
-      state.passiveClock -= 1.5;
-      state.food += 1;
-    }
     updateEnemies(delta);
     updateSpawning(delta);
     updateUnitAttacks(delta);
@@ -171,7 +219,7 @@
   function refreshPocket() {
     if (!state.running || state.over) return;
     if (state.food < REFRESH_COST) {
-      showStatus("饅頭不足；時間經過或擊敗敵軍都會獲得饅頭。");
+      showStatus("軍餉不足；請擊敗敵軍、守住整波，或復活後繼續挑戰。");
       return;
     }
     state.food -= REFRESH_COST;
@@ -183,10 +231,12 @@
       return { ...template, level: 1, cooldown: 0 };
     });
     if (state.refreshCount === 1) {
-      state.pocket[0] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
-      state.pocket[1] = { ...GENERAL_PARTS[1], level: 1, cooldown: 0 };
-      state.pocket[2] = { ...GENERAL_PARTS[0], level: 1, cooldown: 0 };
-      state.pocket[3] = { ...GENERAL_PARTS[1], level: 1, cooldown: 0 };
+      const zhao = GENERAL_PARTS.find(part => part.glyph === "趙");
+      const yun = GENERAL_PARTS.find(part => part.glyph === "雲");
+      state.pocket[0] = { ...zhao, level: 1, cooldown: 0 };
+      state.pocket[1] = { ...yun, level: 1, cooldown: 0 };
+      state.pocket[2] = { ...zhao, level: 1, cooldown: 0 };
+      state.pocket[3] = { ...yun, level: 1, cooldown: 0 };
     }
     const includeShovel = state.refreshCount % 3 === 0 || (state.refreshCount > 1 && Math.random() < 0.28);
     if (includeShovel) state.pocket[Math.floor(Math.random() * POCKET_SIZE)] = { ...SHOVEL };
@@ -624,7 +674,7 @@
     if (state.intermission <= 0) {
       state.intermission = 2.5;
       state.food += 8;
-      showStatus(`第 ${state.wave} 波守住了！獎勵 8 個饅頭。`);
+      showStatus(`第 ${state.wave} 波守住了！獎勵 8 個軍餉。`);
     } else {
       state.intermission -= delta;
       if (state.intermission <= 0) {
@@ -758,12 +808,14 @@
 
   function generalCombatStats(formation, formations = activeGeneralFormations()) {
     const partStats = formation.indexes.map(index => combatStats(state.units[index], formations, index));
+    const effectByGeneral = { zhaoyun: "穿透", guanyu: "範圍", zhangfei: "範圍", machao: "範圍", huangzhong: "單體" };
+    const attackByGeneral = { zhaoyun: "spear", guanyu: "blade", zhangfei: "spear", machao: "cavalry", huangzhong: "bow" };
     return {
       damage: partStats.reduce((sum, stats) => sum + stats.damage, 0),
       attackSpeed: partStats.reduce((sum, stats) => sum + stats.attackSpeed, 0) / partStats.length,
       rangeRadius: Math.max(...formation.indexes.map(index => state.units[index].rangeRadius)),
-      effect: formation.id === "zhaoyun" ? "穿透" : formation.id === "guanyu" ? "範圍" : "單體",
-      attackKind: formation.id === "zhaoyun" ? "spear" : formation.id === "guanyu" ? "blade" : "bow"
+      effect: effectByGeneral[formation.id] ?? "單體",
+      attackKind: attackByGeneral[formation.id] ?? "ink"
     };
   }
 
@@ -787,6 +839,11 @@
         .forEach(enemy => applyDamage(enemy, 36 + starPower * 12));
     } else if (formation.id === "guanyu") {
       state.enemies.forEach(enemy => applyDamage(enemy, 24 + starPower * 10));
+    } else if (formation.id === "zhangfei") {
+      state.enemies.forEach(enemy => applyDamage(enemy, 22 + starPower * 9));
+    } else if (formation.id === "machao") {
+      state.enemies.slice().sort((a, b) => b.progress - a.progress).slice(0, 5)
+        .forEach(enemy => applyDamage(enemy, 30 + starPower * 10));
     } else {
       state.enemies.forEach(enemy => applyDamage(enemy, 28 + starPower * 9));
     }
@@ -881,7 +938,7 @@
       totalReward += enemy.reward;
     }
     if (!defeatedCount) return { defeatedCount: 0, message: "" };
-    let message = `擊敗 ${defeatedCount} 名敵軍，獲得 ${totalReward} 個饅頭。`;
+    let message = `擊敗 ${defeatedCount} 名敵軍，獲得 ${totalReward} 個軍餉。`;
     if (killerFormation) {
       const result = addGeneralExperience(killerFormation, defeatedCount * GENERAL_XP_PER_KILL);
       message += ` ${experienceGainMessage(killerFormation.name, result, "戰鬥勝利")}`;
@@ -913,7 +970,7 @@
     dom.dialogList.hidden = true;
     dom.dialogDetail.textContent = won
       ? `你撐過 10 波，擊敗 ${state.defeated} 名敵軍。`
-      : `你守到第 ${state.wave} 波，擊敗 ${state.defeated} 名敵軍。再試著保留饅頭刷新與開地。`;
+      : `你守到第 ${state.wave} 波，擊敗 ${state.defeated} 名敵軍。再試著保留軍餉刷新與開地。`;
     dom.start.textContent = "再玩一次";
     dom.overlay.classList.remove("hidden");
     render();
@@ -986,7 +1043,7 @@
   }
 
   function renderGeneralFrames(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}-${attackingGeneralKeys.has(formation.key)}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}-${attackingGeneralKeys.has(formation.key)}`).join("|");
     if (dom.generalFrames.dataset.signature === signature) return;
     dom.generalFrames.innerHTML = formations.map(formation => {
       const positions = formation.indexes.map(index => SLOT_LAYOUT[index]);
@@ -996,38 +1053,40 @@
       const rowSpan = formation.orientation === "vertical" ? 2 : 1;
       return `<div class="general-frame ${formation.orientation} general-${formation.id}${attackingGeneralKeys.has(formation.key) ? " attacking" : ""}"
         style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
-        <span>${formation.name}・${"★".repeat(formation.level)}</span>
+        <span class="general-frame-info"><strong>${formation.name}</strong><i><u style="width:${generalXpPercent(formation)}%"></u></i><b>${"★".repeat(formation.level)}</b></span>
       </div>`;
     }).join("");
     dom.generalFrames.dataset.signature = signature;
   }
 
   function renderGenerals(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}`).join("|");
-    if (!formations.length) {
-      if (dom.generals.dataset.signature !== "empty") {
-        dom.generals.innerHTML = `<p class="general-empty">尚未組成武將：武將字必須上下或左右相鄰，斜角不算。</p>`;
-        dom.generals.dataset.signature = "empty";
-      }
-      return;
-    }
+    const byId = new Map(formations.map(formation => [formation.id, formation]));
+    const signature = GENERAL_TYPES.map(general => {
+      const formation = byId.get(general.id);
+      return formation ? `${formation.key}-${formation.level}` : `${general.id}-sleep`;
+    }).join("|");
     if (dom.generals.dataset.signature !== signature) {
-      dom.generals.innerHTML = formations.map(formation => `<article class="general-card ${formation.id}" data-general-card-key="${formation.key}">
-        <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}・${"★".repeat(formation.level)}</strong><small>${formation.passive}</small></span></div>
-        <button class="general-skill" type="button" data-general-key="${formation.key}">${formation.skill}</button>
-        <div class="general-xp"><span><i style="width:${generalXpPercent(formation)}%"></i></span><strong>${formation.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${formation.xp}/${generalXpNeeded(formation.level)}`}</strong></div>
-        <p>${formation.skillNote}</p>
-      </article>`).join("");
+      dom.generals.innerHTML = GENERAL_TYPES.map(general => {
+        const formation = byId.get(general.id);
+        return `<button class="general-skill general-${general.id}${formation ? " awake" : " sleeping"}" type="button"
+          data-general-id="${general.id}"${formation ? ` data-general-key="${formation.key}"` : ""}
+          aria-label="${formation ? `${general.name}，${general.skill}` : `${general.name}尚未合體`}">
+          <span class="skill-glyph">${general.parts[0]}</span><small>${general.name}</small>
+        </button>`;
+      }).join("");
       dom.generals.dataset.signature = signature;
     }
-    formations.forEach(formation => {
-      const card = dom.generals.querySelector(`[data-general-card-key="${formation.key}"]`);
-      const button = card?.querySelector(".general-skill");
+    GENERAL_TYPES.forEach(general => {
+      const formation = byId.get(general.id);
+      const button = dom.generals.querySelector(`[data-general-id="${general.id}"]`);
       if (!button) return;
-      const cooldown = state.generalCooldowns[formation.id] ?? 0;
+      const cooldown = state.generalCooldowns[general.id] ?? 0;
       const ready = cooldown <= 0;
-      button.disabled = !ready || !state.enemies.length;
-      button.textContent = ready ? formation.skill : `${formation.skill}・${cooldown.toFixed(1)}秒`;
+      const progress = ready ? 100 : Math.max(0, (1 - cooldown / general.cooldown) * 100);
+      button.style.setProperty("--skill-progress", `${progress}%`);
+      button.disabled = !formation || !ready || !state.enemies.length;
+      button.querySelector(".skill-glyph").textContent = formation && !ready ? String(Math.ceil(cooldown)) : general.parts[0];
+      button.querySelector("small").textContent = formation ? general.skill : `${general.name}・沉睡`;
     });
   }
 
@@ -1078,8 +1137,8 @@
   function unitPosition(index) {
     const [column, row] = SLOT_LAYOUT[index];
     return {
-      x: 12 + (column - 0.5) * (76 / BOARD_COLUMNS),
-      y: 12 + (row - 0.5) * (76 / BOARD_ROWS)
+      x: BOARD_LEFT + (column - 0.5) * (BOARD_WIDTH / BOARD_COLUMNS),
+      y: BOARD_TOP + (row - 0.5) * (BOARD_HEIGHT / BOARD_ROWS)
     };
   }
 
@@ -1219,6 +1278,7 @@
   function showStatus(message) { dom.status.textContent = message; }
   function enemyCountForWave(wave) { return 4 + wave; }
 
+  applySelectedMap();
   buildBoard();
   buildPocket();
   state = freshState();
@@ -1228,6 +1288,16 @@
   dom.generals.addEventListener("click", event => {
     const button = event.target.closest("[data-general-key]");
     if (button) useGeneralSkill(button.dataset.generalKey);
+  });
+  dom.mapSelect.addEventListener("click", event => {
+    const button = event.target.closest("[data-map-id]");
+    if (!button) return;
+    selectedMapId = button.dataset.mapId;
+    applySelectedMap();
+    buildBoard();
+    state = freshState();
+    renderPocket();
+    render();
   });
   window.addEventListener("pointermove", pointerMove, { passive: false });
   window.addEventListener("pointerup", pointerUp, { passive: false });
