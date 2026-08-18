@@ -39,6 +39,13 @@
     { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeCells: 4,
       passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
+  const GENERAL_SKILL_ART = {
+    guanyu: "assets/vfx/guanyu-green-dragon.png",
+    zhaoyun: "assets/vfx/zhaoyun-blue-dragon.png",
+    zhangfei: "assets/vfx/zhangfei-golden-quake.png",
+    machao: "assets/vfx/machao-metal-charge.png",
+    huangzhong: "assets/vfx/huangzhong-fire-arrow.png"
+  };
   const GENERAL_PARTS = [
     { kind: "unit", glyph: "趙", weapon: "槍", generalId: "zhaoyun", name: "武將字・趙", damage: 10, attackSpeed: 0.9, rangeCells: 2, effect: "穿透", role: "與「雲」相鄰可成將", attackKind: "spear" },
     { kind: "unit", glyph: "雲", weapon: "槍", generalId: "zhaoyun", name: "武將字・雲", damage: 8, attackSpeed: 1.05, rangeCells: 2, effect: "單體", role: "與「趙」相鄰可成將", attackKind: "spear" },
@@ -58,6 +65,18 @@
     water: { element: "水", eliteGlyph: "游", eliteName: "游水印", bossGlyph: "潮", bossName: "潮印首領" },
     fire: { element: "火", eliteGlyph: "熔", eliteName: "熔火印", bossGlyph: "爐", bossName: "爐印首領" },
     earth: { element: "土", eliteGlyph: "壘", eliteName: "岩壘印", bossGlyph: "岳", bossName: "岳印首領" }
+  };
+  const ENEMY_ART = {
+    elite: {
+      metal: "assets/enemies/elite-metal.png", wood: "assets/enemies/elite-wood.png",
+      water: "assets/enemies/elite-water.png", fire: "assets/enemies/elite-fire.png",
+      earth: "assets/enemies/elite-earth.png"
+    },
+    boss: {
+      metal: "assets/enemies/boss-metal.png", wood: "assets/enemies/boss-wood.png",
+      water: "assets/enemies/boss-water.png", fire: "assets/enemies/boss-fire.png",
+      earth: "assets/enemies/boss-earth.png"
+    }
   };
   const MAP_TYPES = [
     { id: "metal", element: "金", name: "鑄鐵關", background: "assets/maps/metal-forge.jpg",
@@ -122,6 +141,7 @@
   let currentDropTarget = null;
   let selectedPocketIndex = null;
   let lastBoardTap = null;
+  let combatArtPreloaded = false;
   const attackingSlots = new Set();
   const attackingGeneralKeys = new Set();
 
@@ -220,8 +240,23 @@
     showStatus("先刷新口袋；可直接拖到戰鬥格，或先點文字再點格子部署。");
     renderPocket();
     render();
+    preloadCombatArt();
     cancelAnimationFrame(rafId);
     rafId = requestAnimationFrame(tick);
+  }
+
+  function preloadCombatArt() {
+    if (combatArtPreloaded) return;
+    combatArtPreloaded = true;
+    const sources = [
+      ...Object.values(GENERAL_SKILL_ART),
+      ...Object.values(ENEMY_ART).flatMap(rank => Object.values(rank))
+    ];
+    sources.forEach(source => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = source;
+    });
   }
 
   function tick(now) {
@@ -925,11 +960,11 @@
     const effect = document.createElement("div");
     effect.className = `general-skill-fx ${formation.id}`;
     const visuals = {
-      guanyu: `<div class="skill-visual"><i class="green-cleave"></i><strong class="skill-dragon">龍</strong><span class="dragon-trail"></span></div>`,
-      zhaoyun: `<div class="skill-visual"><i class="blue-spear"></i><strong class="skill-dragon">龍</strong><span class="target-ring one"></span><span class="target-ring two"></span><span class="target-ring three"></span></div>`,
-      zhangfei: `<div class="skill-visual"><i class="shockwave one"></i><i class="shockwave two"></i><i class="shockwave three"></i><strong class="quake-glyph">碎</strong></div>`,
-      machao: `<div class="skill-visual"><i class="charge-line"></i><strong class="iron-rider">馬</strong><span class="metal-shard one">◇</span><span class="metal-shard two">◇</span><span class="metal-shard three">◇</span></div>`,
-      huangzhong: `<div class="skill-visual arrow-volley"><i class="fire-arrow main"></i><i class="fire-arrow secondary one"></i><i class="fire-arrow secondary two"></i><i class="fire-arrow secondary three"></i><i class="fire-arrow secondary four"></i></div>`
+      guanyu: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.guanyu}" alt=""></div>`,
+      zhaoyun: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.zhaoyun}" alt=""></div>`,
+      zhangfei: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.zhangfei}" alt=""></div>`,
+      machao: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.machao}" alt=""></div>`,
+      huangzhong: `<div class="skill-visual arrow-volley"><img class="skill-arrow main" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary one" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary two" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary three" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary four" src="${GENERAL_SKILL_ART.huangzhong}" alt=""></div>`
     };
     effect.innerHTML = `<div class="skill-caption"><b>${formation.name}</b><span>${formation.skill}</span></div>${visuals[formation.id] ?? ""}`;
     dom.attackFx.append(effect);
@@ -937,7 +972,7 @@
     attackingGeneralKeys.add(formation.key);
     renderBoard(activeGeneralFormations());
     renderGeneralFrames(activeGeneralFormations());
-    window.setTimeout(() => effect.remove(), 1100);
+    window.setTimeout(() => effect.remove(), 1700);
     window.setTimeout(() => {
       dom.battlefield.classList.remove("skill-casting", `skill-${formation.id}`);
       attackingGeneralKeys.delete(formation.key);
@@ -946,7 +981,7 @@
         renderBoard(formations);
         renderGeneralFrames(formations);
       }
-    }, 850);
+    }, 1500);
   }
 
   function updateUnitAttacks(delta) {
@@ -1194,10 +1229,15 @@
       const point = routePoint(enemy.progress);
       const y = Math.max(8, Math.min(92, point.y + (index % 3 - 1) * 2.5));
       const hit = enemy.hitUntil > performance.now() ? " hit" : "";
+      const art = enemyArtSource(enemy);
       return `<div class="enemy-token ${enemy.rank} element-${enemy.element}${hit}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
-        <span class="enemy-aura"></span><strong>${enemy.glyph}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
+        <span class="enemy-aura"></span>${art ? `<img class="enemy-art" src="${art}" alt="">` : ""}<strong>${enemy.glyph}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
         <small>${enemy.rank === "boss" ? "首領" : enemy.rank === "elite" ? "菁英" : Math.ceil(enemy.health)}</small></div>`;
     }).join("");
+  }
+
+  function enemyArtSource(enemy) {
+    return ENEMY_ART[enemy.rank]?.[enemy.element] ?? "";
   }
 
   function routePoint(progress) {
@@ -1319,9 +1359,10 @@
   function animateEnemyArrival(enemy) {
     const effect = document.createElement("div");
     effect.className = `enemy-arrival ${enemy.rank} element-${enemy.element}`;
-    effect.innerHTML = `<small>${enemy.rank === "boss" ? "首領來襲" : "菁英現身"}</small><strong>${enemy.glyph}</strong><b>${enemy.name}</b>`;
+    const art = enemyArtSource(enemy);
+    effect.innerHTML = `<small>${enemy.rank === "boss" ? "首領來襲" : "菁英現身"}</small><span class="arrival-emblem">${art ? `<img src="${art}" alt="">` : ""}<strong>${enemy.glyph}</strong></span><b>${enemy.name}</b>`;
     dom.attackFx.append(effect);
-    window.setTimeout(() => effect.remove(), 1250);
+    window.setTimeout(() => effect.remove(), 1550);
   }
 
   function animateEnemyDefeat(enemy) {
@@ -1331,9 +1372,9 @@
     effect.className = `enemy-defeat ${enemy.rank} element-${enemy.element}`;
     effect.style.left = `${point.x}%`;
     effect.style.top = `${point.y}%`;
-    effect.innerHTML = `<i>${enemy.glyph}</i><b></b><em></em><u></u>`;
+    effect.innerHTML = `<img class="enemy-defeat-art" src="${enemyArtSource(enemy)}" alt=""><i>${enemy.glyph}</i><b></b><em></em><u></u>`;
     dom.attackFx.append(effect);
-    window.setTimeout(() => effect.remove(), 850);
+    window.setTimeout(() => effect.remove(), 1050);
   }
 
   function showRangeIndicator(unit, index) {

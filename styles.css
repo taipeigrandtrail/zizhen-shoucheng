@@ -1,6 +1,16 @@
+@font-face {
+  font-family: "Iansui";
+  src: url("assets/fonts/iansui-tc-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --font-ink: "Iansui", "BiauKai", "DFKai-SB", "Kaiti TC", serif;
+  --font-ui: "Iansui", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-family: var(--font-ui);
   --bg: #0e151d;
   --panel: #17232d;
   --panel-2: #111c24;
@@ -1286,4 +1296,250 @@ footer { display: none; }
   .pocket-item { height: 44px; }
   .refresh { min-height: 38px; }
   .status { min-height: 11px; height: 11px; line-height: 11px; }
+}
+
+/* v0.26：正式美術特效與繁中字體 */
+.game-header h1,
+.slot .glyph,
+.pocket-item .glyph,
+.enemy-token strong,
+.enemy-arrival strong,
+.skill-caption,
+.general-skill .skill-glyph,
+.general-name > b,
+.unit-card-title b,
+#map-select button {
+  font-family: var(--font-ink);
+}
+
+.game-header h1 {
+  font-weight: 400;
+  text-shadow: 0 1px 0 #5c3518, 0 0 9px rgba(230, 182, 77, .45);
+}
+.slot.filled,
+.pocket-item:not(.used) {
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255,255,255,.7), transparent 26%),
+    linear-gradient(145deg, #f4e8c7, #d8bd83);
+  border-color: #bf8a32;
+  box-shadow: inset 0 0 0 1px rgba(255,248,214,.75), inset 0 -5px 9px rgba(94,57,16,.12), 0 2px 4px rgba(0,0,0,.38);
+}
+.slot .glyph,
+.pocket-item .glyph {
+  color: #2b1b12;
+  font-weight: 400;
+  text-shadow: .5px .7px 0 rgba(80,44,18,.32);
+}
+.enemy-token strong,
+.enemy-arrival strong {
+  font-weight: 400;
+  text-shadow: 0 0 2px #ff6e56, 1px 2px 0 #3b0708, 0 0 7px #a10f13;
+}
+
+.general-skill-fx {
+  inset: 1%;
+  animation: skill-art-life 1.65s ease-out forwards;
+}
+.general-skill-fx .skill-caption {
+  left: 50%;
+  top: auto;
+  bottom: 2%;
+  z-index: 7;
+  padding: 4px 12px 5px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(238,196,89,.75);
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent, rgba(17,8,5,.9) 18%, rgba(17,8,5,.9) 82%, transparent);
+  box-shadow: 0 0 15px rgba(0,0,0,.8);
+  animation: skill-caption-life 1.6s ease-out forwards;
+}
+.general-skill-fx .skill-caption b {
+  color: #ffe5a0;
+  font-size: clamp(22px, 7vw, 34px);
+  font-weight: 400;
+  letter-spacing: .08em;
+  text-shadow: 0 0 7px #ad5d20, 2px 2px 0 #2c160f;
+}
+.general-skill-fx .skill-caption span { margin-top: 1px; font-size: 10px; font-weight: 400; letter-spacing: .22em; }
+.general-skill-fx .skill-visual { inset: 0; overflow: hidden; }
+.skill-art {
+  position: absolute;
+  display: block;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  will-change: transform, opacity, filter;
+}
+.general-skill-fx.guanyu .skill-art,
+.general-skill-fx.zhaoyun .skill-art,
+.general-skill-fx.machao .skill-art {
+  left: -92%;
+  top: 25%;
+  width: 145%;
+  filter: drop-shadow(0 0 8px rgba(99, 240, 120, .62));
+  animation: painted-charge 1.42s cubic-bezier(.12,.72,.24,1) forwards;
+}
+.general-skill-fx.zhaoyun .skill-art { top: 30%; filter: drop-shadow(0 0 9px rgba(64,190,255,.72)); animation-duration: 1.3s; }
+.general-skill-fx.machao .skill-art { top: 29%; filter: drop-shadow(0 0 8px rgba(231,238,242,.72)); animation-duration: 1.25s; }
+.general-skill-fx.zhangfei .skill-art {
+  left: 50%;
+  top: 48%;
+  width: 125%;
+  max-height: 112%;
+  transform: translate(-50%, -50%) scale(.15);
+  filter: drop-shadow(0 0 12px rgba(255,190,56,.78));
+  animation: painted-quake 1.25s ease-out forwards;
+}
+.general-skill-fx .arrow-volley { inset: -4%; transform: none; }
+.skill-arrow {
+  position: absolute;
+  left: -92%;
+  width: 63%;
+  height: auto;
+  opacity: 0;
+  filter: drop-shadow(0 0 8px rgba(255,94,20,.8));
+  transform: rotate(-12deg);
+  animation: painted-arrow-flight .72s cubic-bezier(.14,.72,.22,1) forwards;
+}
+.skill-arrow.main { top: 44%; width: 88%; animation-duration: .78s; }
+.skill-arrow.secondary.one { top: 20%; animation-delay: .26s; }
+.skill-arrow.secondary.two { top: 34%; animation-delay: .38s; }
+.skill-arrow.secondary.three { top: 58%; animation-delay: .5s; }
+.skill-arrow.secondary.four { top: 72%; animation-delay: .62s; }
+.battlefield.skill-casting { animation-duration: 1.45s; }
+
+@keyframes skill-art-life {
+  0% { opacity: 0; }
+  8%, 78% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes skill-caption-life {
+  0%, 22% { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  38%, 78% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; }
+}
+@keyframes painted-charge {
+  0% { transform: translateX(0) scale(.72); opacity: 0; }
+  14% { opacity: 1; }
+  74% { transform: translateX(65%) scale(1.02); opacity: 1; }
+  100% { transform: translateX(112%) scale(1.12); opacity: 0; }
+}
+@keyframes painted-quake {
+  0% { transform: translate(-50%, -50%) scale(.15) rotate(-10deg); opacity: 0; }
+  22% { opacity: 1; }
+  72% { transform: translate(-50%, -50%) scale(1.02) rotate(0); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.28) rotate(5deg); opacity: 0; }
+}
+@keyframes painted-arrow-flight {
+  0% { transform: translateX(0) rotate(-12deg) scale(.8); opacity: 0; }
+  12% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { transform: translateX(265%) rotate(-12deg) scale(1.02); opacity: 0; }
+}
+
+/* 五行敵軍正式美術：紅黑印章本體疊加單一中文字 */
+.enemy-token.elite,
+.enemy-token.boss {
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+}
+.enemy-token .enemy-art {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 0;
+  width: 178%;
+  height: 178%;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.76));
+  pointer-events: none;
+  animation: enemy-art-breathe 1.35s ease-in-out infinite;
+}
+.enemy-token.boss .enemy-art {
+  width: 194%;
+  height: 194%;
+  filter: drop-shadow(0 0 6px var(--element-glow)) drop-shadow(0 3px 4px rgba(0,0,0,.82));
+  animation-duration: 1.05s;
+}
+.enemy-token.elite .enemy-aura,
+.enemy-token.boss .enemy-aura { display: none; }
+.enemy-token.elite strong,
+.enemy-token.boss strong {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 62%;
+  line-height: 1;
+  transform: translate(-50%, -52%);
+}
+.enemy-token.elite strong { font-size: 20px; }
+.enemy-token.boss strong { font-size: 25px; }
+.enemy-token .token-health,
+.enemy-token small { z-index: 3; }
+
+.enemy-arrival { animation-duration: 1.5s; }
+.enemy-arrival .arrival-emblem {
+  position: relative;
+  display: grid;
+  width: 116px;
+  height: 116px;
+  margin: -4px 0 -1px;
+  place-items: center;
+}
+.enemy-arrival.boss .arrival-emblem { width: 148px; height: 148px; margin: -10px 0 -7px; }
+.enemy-arrival .arrival-emblem img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px var(--element-glow));
+}
+.enemy-arrival .arrival-emblem strong,
+.enemy-arrival.boss .arrival-emblem strong {
+  position: relative;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 45px;
+  line-height: 1;
+}
+.enemy-arrival.boss .arrival-emblem strong { font-size: 58px; }
+.enemy-arrival b { font-family: var(--font-ink); font-weight: 400; letter-spacing: .12em; }
+
+.enemy-defeat .enemy-defeat-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 7px var(--element-glow));
+  animation: enemy-art-shatter .95s ease-out forwards;
+}
+.enemy-defeat.boss .enemy-defeat-art { width: 122px; height: 122px; }
+.enemy-defeat i {
+  z-index: 2;
+  font-family: var(--font-ink);
+  font-weight: 400;
+  animation-duration: .92s;
+}
+
+@keyframes enemy-art-breathe {
+  0%, 100% { transform: translate(-50%, -50%) scale(.94); }
+  50% { transform: translate(-50%, -50%) scale(1.04); }
+}
+@keyframes enemy-art-shatter {
+  0% { transform: translate(-50%, -50%) scale(.82) rotate(0); opacity: 1; }
+  48% { transform: translate(-50%, -50%) scale(1.15) rotate(-4deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.55) rotate(10deg); opacity: 0; filter: blur(4px) drop-shadow(0 0 16px var(--element-glow)); }
 }
