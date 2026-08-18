@@ -340,8 +340,10 @@
         : "這兩個文字都已經是最高 5 星。");
       return;
     } else {
-      showStatus("這格已有其他文字；請拖到空格，或拖到相同文字進行合成。");
-      return;
+      state.units[targetIndex] = { ...item, cooldown: 0 };
+      state.pocket[pocketIndex] = target;
+      selectedPocketIndex = null;
+      showStatus(`交換成功：「${item.glyph}」進入戰場，「${target.glyph}」回到口袋。`);
     }
     renderPocket();
     render();
