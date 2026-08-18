@@ -19,6 +19,7 @@
   const GENERAL_XP_PER_KILL = 1;
   const GENERAL_XP_PER_WORD = 3;
   const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
+  const ENEMY_ELITES_AT = new Set([3, 6, 9]);
   const INITIAL_UNLOCKED = new Set([0, 1, 2, 3, 4, 5]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeCells: 1, effect: "單體", role: "近距快攻" },
@@ -51,6 +52,13 @@
     { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeCells: 3, effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" }
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
+  const ENEMY_TYPES = {
+    metal: { element: "金", eliteGlyph: "鋼", eliteName: "鋼甲印", bossGlyph: "鎧", bossName: "鎧印首領" },
+    wood: { element: "木", eliteGlyph: "枝", eliteName: "纏枝印", bossGlyph: "森", bossName: "森印首領" },
+    water: { element: "水", eliteGlyph: "游", eliteName: "游水印", bossGlyph: "潮", bossName: "潮印首領" },
+    fire: { element: "火", eliteGlyph: "熔", eliteName: "熔火印", bossGlyph: "爐", bossName: "爐印首領" },
+    earth: { element: "土", eliteGlyph: "壘", eliteName: "岩壘印", bossGlyph: "岳", bossName: "岳印首領" }
+  };
   const MAP_TYPES = [
     { id: "metal", element: "金", name: "鑄鐵關", background: "assets/maps/metal-forge.jpg",
       route: [[1,10],[5,10],[5,8],[2,8],[2,6],[7,6],[7,4],[4,4],[4,2],[8,2],[8,1]],
@@ -734,12 +742,25 @@
 
   function spawnEnemy() {
     const boss = state.wave % 5 === 0 && state.wavePending === 1;
-    const maxHealth = (24 + state.wave * 12) * (boss ? 4 : 1);
-    state.enemies.push({
+    const middleSpawn = Math.ceil(enemyCountForWave(state.wave) / 2);
+    const elite = !boss && ENEMY_ELITES_AT.has(state.wave) && state.wavePending === middleSpawn;
+    const rank = boss ? "boss" : elite ? "elite" : "normal";
+    const enemyType = ENEMY_TYPES[selectedMapId] ?? ENEMY_TYPES.metal;
+    const waveHealth = (26 + state.wave * 13) * (1.15 ** (state.wave - 1));
+    const healthMultiplier = boss ? 6 : elite ? 2.4 : 1;
+    const speedMultiplier = boss ? 0.72 : elite ? 0.88 : 1;
+    const maxHealth = Math.round(waveHealth * healthMultiplier);
+    const enemy = {
       id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
-      name: boss ? "Boss" : "敵兵", health: maxHealth, maxHealth, progress: 0,
-      speed: 0.032 + state.wave * 0.0015, reward: boss ? 15 : 5 + Math.floor(state.wave / 3), boss
-    });
+      name: boss ? enemyType.bossName : elite ? enemyType.eliteName : "蝕墨兵",
+      glyph: boss ? enemyType.bossGlyph : elite ? enemyType.eliteGlyph : "敵",
+      element: selectedMapId, rank, health: maxHealth, maxHealth, progress: 0,
+      speed: (0.0305 + state.wave * 0.0018) * speedMultiplier,
+      reward: boss ? 35 : elite ? 16 + state.wave : 5 + Math.floor(state.wave / 2),
+      boss, elite, hitUntil: 0
+    };
+    state.enemies.push(enemy);
+    if (rank !== "normal") animateEnemyArrival(enemy);
   }
 
   function updateEnemies(delta) {
@@ -903,7 +924,14 @@
   function animateGeneralSkill(formation) {
     const effect = document.createElement("div");
     effect.className = `general-skill-fx ${formation.id}`;
-    effect.innerHTML = `<b>${formation.name}</b><span>${formation.skill}</span><i></i><em></em><u></u>`;
+    const visuals = {
+      guanyu: `<div class="skill-visual"><i class="green-cleave"></i><strong class="skill-dragon">龍</strong><span class="dragon-trail"></span></div>`,
+      zhaoyun: `<div class="skill-visual"><i class="blue-spear"></i><strong class="skill-dragon">龍</strong><span class="target-ring one"></span><span class="target-ring two"></span><span class="target-ring three"></span></div>`,
+      zhangfei: `<div class="skill-visual"><i class="shockwave one"></i><i class="shockwave two"></i><i class="shockwave three"></i><strong class="quake-glyph">碎</strong></div>`,
+      machao: `<div class="skill-visual"><i class="charge-line"></i><strong class="iron-rider">馬</strong><span class="metal-shard one">◇</span><span class="metal-shard two">◇</span><span class="metal-shard three">◇</span></div>`,
+      huangzhong: `<div class="skill-visual arrow-volley"><i class="fire-arrow main"></i><i class="fire-arrow secondary one"></i><i class="fire-arrow secondary two"></i><i class="fire-arrow secondary three"></i><i class="fire-arrow secondary four"></i></div>`
+    };
+    effect.innerHTML = `<div class="skill-caption"><b>${formation.name}</b><span>${formation.skill}</span></div>${visuals[formation.id] ?? ""}`;
     dom.attackFx.append(effect);
     dom.battlefield.classList.add("skill-casting", `skill-${formation.id}`);
     attackingGeneralKeys.add(formation.key);
@@ -969,7 +997,10 @@
     });
   }
 
-  function applyDamage(enemy, amount) { enemy.health -= amount; }
+  function applyDamage(enemy, amount) {
+    enemy.health -= amount;
+    enemy.hitUntil = performance.now() + 150;
+  }
 
   function collectDefeatedEnemies(killerFormation = null) {
     let defeatedCount = 0;
@@ -977,6 +1008,7 @@
     for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
       const enemy = state.enemies[i];
       if (enemy.health > 0) continue;
+      animateEnemyDefeat(enemy);
       state.enemies.splice(i, 1);
       state.food += enemy.reward;
       state.defeated += 1;
@@ -1157,13 +1189,14 @@
 
   function renderEnemies() {
     dom.emptyLane.hidden = state.enemies.length > 0;
-    dom.enemies.innerHTML = state.enemies.slice().sort((a, b) => b.progress - a.progress).slice(0, 6).map((enemy, index) => {
+    dom.enemies.innerHTML = state.enemies.slice().sort((a, b) => b.progress - a.progress).map((enemy, index) => {
       const hp = Math.max(0, Math.min(100, enemy.health / enemy.maxHealth * 100));
       const point = routePoint(enemy.progress);
       const y = Math.max(8, Math.min(92, point.y + (index % 3 - 1) * 2.5));
-      return `<div class="enemy-token${enemy.boss ? " boss" : ""}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
-        <strong>${enemy.boss ? "將" : "敵"}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
-        <small>${enemy.boss ? "Boss" : Math.ceil(enemy.health)}</small></div>`;
+      const hit = enemy.hitUntil > performance.now() ? " hit" : "";
+      return `<div class="enemy-token ${enemy.rank} element-${enemy.element}${hit}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
+        <span class="enemy-aura"></span><strong>${enemy.glyph}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
+        <small>${enemy.rank === "boss" ? "首領" : enemy.rank === "elite" ? "菁英" : Math.ceil(enemy.health)}</small></div>`;
     }).join("");
   }
 
@@ -1281,6 +1314,26 @@
     impact.innerHTML = "<i>丶</i><b>丿</b><em>㇏</em>";
     dom.attackFx.append(impact);
     window.setTimeout(() => impact.remove(), 480);
+  }
+
+  function animateEnemyArrival(enemy) {
+    const effect = document.createElement("div");
+    effect.className = `enemy-arrival ${enemy.rank} element-${enemy.element}`;
+    effect.innerHTML = `<small>${enemy.rank === "boss" ? "首領來襲" : "菁英現身"}</small><strong>${enemy.glyph}</strong><b>${enemy.name}</b>`;
+    dom.attackFx.append(effect);
+    window.setTimeout(() => effect.remove(), 1250);
+  }
+
+  function animateEnemyDefeat(enemy) {
+    if (enemy.rank === "normal") return;
+    const point = routePoint(enemy.progress);
+    const effect = document.createElement("span");
+    effect.className = `enemy-defeat ${enemy.rank} element-${enemy.element}`;
+    effect.style.left = `${point.x}%`;
+    effect.style.top = `${point.y}%`;
+    effect.innerHTML = `<i>${enemy.glyph}</i><b></b><em></em><u></u>`;
+    dom.attackFx.append(effect);
+    window.setTimeout(() => effect.remove(), 850);
   }
 
   function showRangeIndicator(unit, index) {
