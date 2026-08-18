@@ -620,55 +620,82 @@ button { font: inherit; }
 
 .general-section {
   margin-top: 10px;
-  padding: 9px;
+  padding: 7px 8px 8px;
   border: 1px solid #3a5c57;
   border-radius: 12px;
   background: linear-gradient(135deg, #13232a, #142b29);
 }
-.generals { display: grid; gap: 7px; }
-.general-empty { margin: 4px; color: #78969a; text-align: center; font-size: 11px; }
+.general-section .section-heading { margin-bottom: 5px; }
+.general-section .section-heading h2 { font-size: 13px; }
+.general-section .section-heading span { font-size: 9px; }
+.generals { display: grid; gap: 5px; }
+.general-empty { margin: 3px; color: #78969a; text-align: center; font-size: 10px; }
 .general-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 8px;
-  padding: 8px;
+  gap: 3px 7px;
+  padding: 6px 7px;
   border: 1px solid #4e7d72;
   border-radius: 10px;
   background: rgba(8,20,24,.55);
 }
-.general-name { display: flex; align-items: center; min-width: 0; gap: 8px; }
+.general-name { display: flex; align-items: center; min-width: 0; gap: 6px; }
 .general-name > b {
   display: grid;
   place-items: center;
-  min-width: 44px;
-  min-height: 42px;
-  padding: 3px;
+  min-width: 38px;
+  min-height: 36px;
+  padding: 2px;
   border: 1px solid #dcbb6d;
-  border-radius: 8px;
+  border-radius: 7px;
   background: #f0e3bf;
   color: #36281c;
   font-family: "DFKai-SB", "BiauKai", "KaiTi", serif;
-  font-size: 22px;
-  line-height: .9;
+  font-size: 18px;
+  line-height: .88;
   text-align: center;
 }
 .general-name span { min-width: 0; }
-.general-name strong { display: block; color: #f3d486; font-size: 14px; }
-.general-name small { display: block; margin-top: 2px; overflow: hidden; color: #9dc3b9; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.general-name strong { display: block; color: #f3d486; font-size: 12px; }
+.general-name small { display: block; margin-top: 1px; overflow: hidden; color: #9dc3b9; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
 .general-skill {
   align-self: center;
-  min-width: 104px;
-  min-height: 38px;
-  padding: 5px 8px;
+  min-width: 96px;
+  min-height: 36px;
+  padding: 4px 6px;
   border: 1px solid #efd081;
-  border-radius: 8px;
+  border-radius: 7px;
   background: linear-gradient(#d7a848, #9f6427);
   color: #fff5d0;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
 }
 .general-skill:disabled { border-color: #40555b; background: #2b3b40; color: #799097; }
-.general-card > p { grid-column: 1 / -1; margin: 0; color: #718f91; font-size: 9px; }
+.general-xp {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+}
+.general-xp > span {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border: 1px solid #715524;
+  border-radius: 99px;
+  background: #172329;
+}
+.general-xp i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #dc9c27, #ffe68a);
+  box-shadow: 0 0 6px rgba(255,208,83,.65);
+  transition: width .3s ease;
+}
+.general-xp strong { color: #d8bd70; font-size: 9px; font-weight: 700; }
+.general-card > p { grid-column: 1 / -1; margin: 0; color: #718f91; font-size: 8px; line-height: 1.2; }
 .unit-general-xp > span {
   display: block;
   height: 7px;

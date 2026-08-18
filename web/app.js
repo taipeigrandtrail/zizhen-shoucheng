@@ -950,7 +950,7 @@
   }
 
   function renderGenerals(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}`).join("|");
     if (!formations.length) {
       if (dom.generals.dataset.signature !== "empty") {
         dom.generals.innerHTML = `<p class="general-empty">尚未組成武將：武將字必須上下或左右相鄰，斜角不算。</p>`;
@@ -962,6 +962,7 @@
       dom.generals.innerHTML = formations.map(formation => `<article class="general-card ${formation.id}" data-general-card-key="${formation.key}">
         <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}・${"★".repeat(formation.level)}</strong><small>${formation.passive}</small></span></div>
         <button class="general-skill" type="button" data-general-key="${formation.key}">${formation.skill}</button>
+        <div class="general-xp"><span><i style="width:${generalXpPercent(formation)}%"></i></span><strong>${formation.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${formation.xp}/${generalXpNeeded(formation.level)}`}</strong></div>
         <p>${formation.skillNote}</p>
       </article>`).join("");
       dom.generals.dataset.signature = signature;
