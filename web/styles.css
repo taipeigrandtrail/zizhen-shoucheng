@@ -1379,7 +1379,13 @@ footer { display: none; }
   filter: drop-shadow(0 0 8px rgba(99, 240, 120, .62));
   animation: painted-charge 1.42s cubic-bezier(.12,.72,.24,1) forwards;
 }
-.general-skill-fx.zhaoyun .skill-art { top: 30%; filter: drop-shadow(0 0 9px rgba(64,190,255,.72)); animation-duration: 1.3s; }
+.general-skill-fx.zhaoyun .skill-art {
+  left: -112%;
+  top: 30%;
+  width: 132%;
+  filter: drop-shadow(0 0 9px rgba(64,190,255,.72));
+  animation: zhaoyun-dragon-pass 1.68s cubic-bezier(.16,.64,.25,1) forwards;
+}
 .general-skill-fx.machao .skill-art { top: 29%; filter: drop-shadow(0 0 8px rgba(231,238,242,.72)); animation-duration: 1.25s; }
 .general-skill-fx.zhangfei .skill-art {
   left: 50%;
@@ -1423,6 +1429,14 @@ footer { display: none; }
   14% { opacity: 1; }
   74% { transform: translateX(65%) scale(1.02); opacity: 1; }
   100% { transform: translateX(112%) scale(1.12); opacity: 0; }
+}
+@keyframes zhaoyun-dragon-pass {
+  0% { transform: translateX(0) scale(.78); opacity: 0; }
+  10% { opacity: 1; }
+  24% { transform: translateX(14%) scale(.92); opacity: 1; }
+  64% { transform: translateX(52%) scale(1); opacity: 1; }
+  82% { transform: translateX(72%) scale(1.03); opacity: 1; }
+  100% { transform: translateX(108%) scale(1.08); opacity: 0; }
 }
 @keyframes painted-quake {
   0% { transform: translate(-50%, -50%) scale(.15) rotate(-10deg); opacity: 0; }
