@@ -1371,13 +1371,17 @@ footer { display: none; }
   will-change: transform, opacity, filter;
 }
 .general-skill-fx.guanyu .skill-art,
-.general-skill-fx.zhaoyun .skill-art,
 .general-skill-fx.machao .skill-art {
   left: -92%;
   top: 25%;
   width: 145%;
   filter: drop-shadow(0 0 8px rgba(99, 240, 120, .62));
   animation: painted-charge 1.42s cubic-bezier(.12,.72,.24,1) forwards;
+}
+.general-skill-fx.guanyu .skill-art {
+  left: -86%;
+  width: 130%;
+  animation: guanyu-dragon-cleave 1.34s cubic-bezier(.16,.62,.22,1) forwards;
 }
 .general-skill-fx.zhaoyun .dragon-swim {
   position: absolute;
@@ -1410,7 +1414,13 @@ footer { display: none; }
 .dragon-swim .segment-5 { --wave-y: 4px; --wave-tilt: .6deg; --wave-delay: -.10s; clip-path: inset(0 28% 0 56%); }
 .dragon-swim .segment-6 { --wave-y: 3px; --wave-tilt: .4deg; --wave-delay: -.05s; clip-path: inset(0 14% 0 70%); }
 .dragon-swim .segment-7 { --wave-y: 2px; --wave-tilt: .2deg; --wave-delay: 0s; clip-path: inset(0 0 0 84%); }
-.general-skill-fx.machao .skill-art { top: 29%; filter: drop-shadow(0 0 8px rgba(231,238,242,.72)); animation-duration: 1.25s; }
+.general-skill-fx.machao .skill-art {
+  left: -118%;
+  top: 29%;
+  width: 140%;
+  filter: drop-shadow(0 0 8px rgba(231,238,242,.72));
+  animation: machao-charge-pass 1.28s linear forwards;
+}
 .general-skill-fx.zhangfei .skill-art {
   left: 50%;
   top: 48%;
@@ -1418,7 +1428,7 @@ footer { display: none; }
   max-height: 112%;
   transform: translate(-50%, -50%) scale(.15);
   filter: drop-shadow(0 0 12px rgba(255,190,56,.78));
-  animation: painted-quake 1.25s ease-out forwards;
+  animation: painted-quake 1.06s ease-out forwards;
 }
 .general-skill-fx .arrow-volley { inset: -4%; transform: none; }
 .skill-arrow {
@@ -1431,7 +1441,7 @@ footer { display: none; }
   transform: rotate(-12deg);
   animation: painted-arrow-flight .72s cubic-bezier(.14,.72,.22,1) forwards;
 }
-.skill-arrow.main { top: 44%; width: 88%; animation-duration: .78s; }
+.skill-arrow.main { top: 44%; width: 88%; animation-name: painted-main-arrow-flight; animation-duration: .72s; }
 .skill-arrow.secondary.one { top: 20%; animation-delay: .26s; }
 .skill-arrow.secondary.two { top: 34%; animation-delay: .38s; }
 .skill-arrow.secondary.three { top: 58%; animation-delay: .5s; }
@@ -1453,6 +1463,23 @@ footer { display: none; }
   14% { opacity: 1; }
   74% { transform: translateX(65%) scale(1.02); opacity: 1; }
   100% { transform: translateX(112%) scale(1.12); opacity: 0; }
+}
+@keyframes guanyu-dragon-cleave {
+  0% { transform: translateX(0) translateY(8px) rotate(-6deg) scale(.72); opacity: 0; }
+  10% { opacity: 1; }
+  28% { transform: translateX(15%) translateY(-4px) rotate(-2deg) scale(.9); opacity: 1; }
+  62% { transform: translateX(42%) translateY(0) rotate(1deg) scale(1); opacity: 1; }
+  82% { transform: translateX(58%) translateY(-3px) rotate(3deg) scale(1.04); opacity: 1; }
+  100% { transform: translateX(76%) translateY(-8px) rotate(6deg) scale(1.08); opacity: 0; }
+}
+@keyframes machao-charge-pass {
+  0% { transform: translateX(0) translateY(5px) rotate(-1deg) scale(.8); opacity: 0; }
+  7% { opacity: 1; }
+  20% { transform: translateX(20%) translateY(-4px) rotate(.5deg) scale(.92); opacity: 1; }
+  39% { transform: translateX(40%) translateY(3px) rotate(-.5deg) scale(.97); opacity: 1; }
+  58% { transform: translateX(59%) translateY(-4px) rotate(.5deg) scale(1); opacity: 1; }
+  78% { transform: translateX(79%) translateY(2px) rotate(-.3deg) scale(1.02); opacity: 1; }
+  100% { transform: translateX(110%) translateY(-2px) rotate(0) scale(1.04); opacity: 0; }
 }
 @keyframes zhaoyun-dragon-pass {
   0% { transform: translateX(0) scale(.78); opacity: 0; }
@@ -1476,7 +1503,13 @@ footer { display: none; }
   0% { transform: translateX(0) rotate(-12deg) scale(.8); opacity: 0; }
   12% { opacity: 1; }
   82% { opacity: 1; }
-  100% { transform: translateX(265%) rotate(-12deg) scale(1.02); opacity: 0; }
+  100% { transform: translateX(240%) rotate(-12deg) scale(1.02); opacity: 0; }
+}
+@keyframes painted-main-arrow-flight {
+  0% { transform: translateX(0) rotate(-12deg) scale(.82); opacity: 0; }
+  10% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { transform: translateX(155%) rotate(-12deg) scale(1.04); opacity: 0; }
 }
 
 /* 五行敵軍正式美術：紅黑印章本體疊加單一中文字 */
