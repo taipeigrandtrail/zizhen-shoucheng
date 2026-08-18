@@ -299,6 +299,25 @@ button { font: inherit; }
   font-weight: 900;
   line-height: 1.2;
 }
+.general-frame-xp {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 4px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(79,48,15,.55);
+  box-shadow: 0 0 0 1px rgba(255,236,170,.28);
+}
+.general-frame-xp i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f2b93d, #fff0a0);
+  box-shadow: 0 0 6px #ffd45f;
+  transition: width .3s ease;
+}
 .slot.sleeping-general { border-color: #6f7c83; background: #d8d3bd; color: #625f57; }
 .slot.sleeping-general::after {
   content: "💤";
@@ -669,6 +688,32 @@ button { font: inherit; }
 }
 .general-skill:disabled { border-color: #40555b; background: #2b3b40; color: #799097; }
 .general-card > p { grid-column: 1 / -1; margin: 0; color: #718f91; font-size: 9px; }
+.general-xp {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+.general-xp > span,
+.unit-general-xp > span {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid #715524;
+  border-radius: 99px;
+  background: #172329;
+}
+.general-xp i,
+.unit-general-xp i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #dc9c27, #ffe68a);
+  box-shadow: 0 0 8px rgba(255,208,83,.72);
+  transition: width .3s ease;
+}
+.general-xp small { color: #e5c46c; font-size: 9px; white-space: nowrap; }
 
 .pocket-section {
   margin-top: 10px;
@@ -742,6 +787,18 @@ button { font: inherit; }
 .attribute-grid span { display: block; color: #7f98a5; font-size: 10px; }
 .attribute-grid strong { display: block; margin-top: 3px; color: #e9f0f2; font-size: 15px; }
 .unit-card-note { margin: 11px 2px 0; color: #8fabb8; font-size: 11px; line-height: 1.5; }
+.unit-general-xp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  margin-top: 11px;
+  padding: 9px;
+  border: 1px solid #705c31;
+  border-radius: 9px;
+  background: #151f22;
+}
+.unit-general-xp strong { color: #f1d47d; font-size: 11px; }
 
 .refresh, .dialog button {
   width: 100%;

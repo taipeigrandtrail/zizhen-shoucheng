@@ -8,6 +8,9 @@
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
+  const GENERAL_XP_PER_KILL = 1;
+  const GENERAL_XP_PER_WORD = 3;
+  const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
   const INITIAL_UNLOCKED = new Set([6, 7, 11, 12, 16, 17]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
@@ -189,7 +192,7 @@
     showStatus(includeShovel
       ? "刷新完成！出現鏟子，把它拖到鎖定格即可開地。"
       : state.refreshCount === 1
-        ? "首次刷新出現兩組「趙、雲」；先完成兩組同星趙雲，再把一組拖到另一組進行武將合體。"
+        ? "首次刷新出現兩組「趙、雲」；先組成趙雲，再把額外的趙或雲拖到武將的相同文字上增加經驗。"
         : "刷新完成！武將字上下或左右相鄰，就能組成武將。");
   }
 
@@ -232,12 +235,28 @@
     const targetFormation = target
       ? activeGeneralFormations().find(formation => formation.indexes.includes(to))
       : null;
+    const sourceFormation = activeGeneralFormations().find(formation => formation.indexes.includes(from));
     if (!target) {
       state.units[to] = source;
       state.units[from] = null;
       showStatus(`已把「${source.glyph}」移到新位置。`);
     } else if (targetFormation) {
-      showStatus(`${targetFormation.name}已經是完整武將；必須用另一組同名、同星武將才能升級。`);
+      if (sourceFormation?.key === targetFormation.key) {
+        showStatus(`${targetFormation.name}是同一個整體；拖到空格才能拆開。`);
+        return;
+      }
+      if (source.generalId === targetFormation.id && targetFormation.parts.includes(source.glyph)) {
+        if (targetFormation.level >= MAX_LEVEL) {
+          showStatus(`${targetFormation.name}已經是最高 5 星。`);
+          return;
+        }
+        state.units[from] = null;
+        const result = addGeneralExperience(targetFormation, GENERAL_XP_PER_WORD);
+        showStatus(experienceGainMessage(targetFormation.name, result, `吸收「${source.glyph}」`));
+        render();
+        return;
+      }
+      showStatus(`${targetFormation.name}只能吸收組成自己的文字：「${targetFormation.parts.join("、")}」。`);
       return;
     } else if (canCombine(source, target)) {
       const level = upgradeSingleUnit(to);
@@ -245,7 +264,9 @@
       state.food += 2;
       showStatus(`合成成功：「${target.glyph}」升為 ${level} 星！`);
     } else if (source.glyph === target.glyph && source.level === target.level) {
-      showStatus("這兩個文字都已經是最高 5 星。");
+      showStatus(source.generalId
+        ? "武將單字不能合體升級；請先組成武將，再把相同文字餵給他增加經驗。"
+        : "這兩個文字都已經是最高 5 星。");
     } else {
       state.units[to] = source;
       state.units[from] = target;
@@ -285,14 +306,28 @@
       state.pocket[pocketIndex] = null;
       showStatus(`已把「${item.glyph}」部署到戰鬥場地。`);
     } else if (targetFormation) {
-      showStatus(`單獨的「${item.glyph}」不能升級${targetFormation.name}；請先完成另一組同名、同星武將。`);
+      if (item.generalId === targetFormation.id && targetFormation.parts.includes(item.glyph)) {
+        if (targetFormation.level >= MAX_LEVEL) {
+          showStatus(`${targetFormation.name}已經是最高 5 星。`);
+          return;
+        }
+        state.pocket[pocketIndex] = null;
+        const result = addGeneralExperience(targetFormation, GENERAL_XP_PER_WORD);
+        showStatus(experienceGainMessage(targetFormation.name, result, `吸收「${item.glyph}」`));
+        renderPocket();
+        render();
+        return;
+      }
+      showStatus(`${targetFormation.name}只能吸收組成自己的文字：「${targetFormation.parts.join("、")}」。`);
       return;
     } else if (canCombine(item, target)) {
       const level = upgradeSingleUnit(targetIndex);
       state.pocket[pocketIndex] = null;
       showStatus(`合成成功：「${target.glyph}」升為 ${level} 星！`);
     } else if (item.glyph === target.glyph && item.level === target.level) {
-      showStatus("這兩個文字都已經是最高 5 星。");
+      showStatus(item.generalId
+        ? "武將單字不能合體升級；請先組成武將，再餵給完整武將增加經驗。"
+        : "這兩個文字都已經是最高 5 星。");
       return;
     } else {
       showStatus("這格已有其他文字；請拖到空格，或拖到相同文字進行合成。");
@@ -303,7 +338,8 @@
   }
 
   function canCombine(source, target) {
-    return source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
+    return !source.generalId && !target.generalId
+      && source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
   }
 
   function upgradeSingleUnit(targetIndex) {
@@ -318,26 +354,7 @@
     const sourceGeneral = formations.find(formation => formation.indexes.includes(from));
     const targetGeneral = formations.find(formation => formation.indexes.includes(to));
     if (!sourceGeneral || !targetGeneral || sourceGeneral.key === targetGeneral.key) return false;
-    if (sourceGeneral.id !== targetGeneral.id) {
-      showStatus("只有同名武將才能合體升級。");
-      return true;
-    }
-    if (sourceGeneral.level !== targetGeneral.level) {
-      showStatus(`兩組${targetGeneral.name}必須星級相同才能合體。`);
-      return true;
-    }
-    if (targetGeneral.level >= MAX_LEVEL) {
-      showStatus(`${targetGeneral.name}已經是最高 5 星。`);
-      return true;
-    }
-    targetGeneral.indexes.forEach(index => {
-      const unit = state.units[index];
-      state.units[index] = { ...unit, level: Math.min(MAX_LEVEL, unit.level + 1) };
-    });
-    sourceGeneral.indexes.forEach(index => { state.units[index] = null; });
-    state.food += 4;
-    showStatus(`武將合體成功：${targetGeneral.name}升為 ${targetGeneral.level + 1} 星！`);
-    render();
+    showStatus("武將已改為經驗制，不再互相合體直升。請先把來源武將拆開，再將相同單字餵給目標武將。");
     return true;
   }
 
@@ -359,7 +376,9 @@
       selectedPocketIndex = null;
       showStatus(`口袋合體成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
     } else if (target.kind === "unit" && source.glyph === target.glyph && source.level === target.level) {
-      showStatus("這兩個文字都已經是最高 5 星。");
+      showStatus(source.generalId
+        ? "武將單字不能在口袋合體升級；請先組成武將，再餵給武將增加經驗。"
+        : "這兩個文字都已經是最高 5 星。");
       return;
     } else {
       showStatus("口袋只能合體相同文字、相同星級的棋子。");
@@ -383,7 +402,9 @@
       selectedPocketIndex = null;
       showStatus(`收回並合體成功：「${target.glyph}」升為 ${target.level + 1} 星！`);
     } else if (target.kind === "unit" && source.glyph === target.glyph && source.level === target.level) {
-      showStatus("這兩個文字都已經是最高 5 星。請改拖到口袋空格。");
+      showStatus(source.generalId
+        ? "武將單字不能在口袋合體升級；請改拖到口袋空格。"
+        : "這兩個文字都已經是最高 5 星。請改拖到口袋空格。");
       return;
     } else {
       showStatus("這個口袋格已有其他內容，請拖到空格或相同文字、相同星級的棋子。");
@@ -613,8 +634,12 @@
         const secondPosition = SLOT_LAYOUT[secondIndex];
         const orientation = firstPosition[0] === secondPosition[0] ? "vertical" : "horizontal";
         const sorted = [firstIndex, secondIndex].sort((a, b) => a - b);
-        formations.push({ ...general, indexes: [firstIndex, secondIndex], orientation,
-          level: Math.min(state.units[firstIndex].level, state.units[secondIndex].level),
+        const level = Math.min(state.units[firstIndex].level, state.units[secondIndex].level);
+        const xp = level >= MAX_LEVEL ? 0 : Math.min(
+          state.units[firstIndex].generalXp ?? 0,
+          state.units[secondIndex].generalXp ?? 0
+        );
+        formations.push({ ...general, indexes: [firstIndex, secondIndex], orientation, level, xp,
           key: `${general.id}-${sorted[0]}-${sorted[1]}` });
       });
     });
@@ -628,6 +653,39 @@
       .map(formation => formation.name);
     state.activeGeneralKeys = nextKeys;
     if (newNames.length) showStatus(`武將組成：${newNames.join("、")}！被動效果已啟動，可以施放武將技。`);
+  }
+
+  function generalXpNeeded(level) {
+    return level >= MAX_LEVEL ? 0 : GENERAL_XP_TO_NEXT[level];
+  }
+
+  function generalXpPercent(formation) {
+    if (formation.level >= MAX_LEVEL) return 100;
+    return Math.min(100, formation.xp / generalXpNeeded(formation.level) * 100);
+  }
+
+  function addGeneralExperience(formation, amount) {
+    let level = formation.level;
+    let xp = formation.xp ?? 0;
+    let levelsGained = 0;
+    if (level < MAX_LEVEL) xp += amount;
+    while (level < MAX_LEVEL && xp >= generalXpNeeded(level)) {
+      xp -= generalXpNeeded(level);
+      level += 1;
+      levelsGained += 1;
+    }
+    if (level >= MAX_LEVEL) xp = 0;
+    formation.indexes.forEach(index => {
+      const unit = state.units[index];
+      if (unit) state.units[index] = { ...unit, level, generalXp: xp };
+    });
+    return { amount, level, xp, needed: generalXpNeeded(level), levelsGained };
+  }
+
+  function experienceGainMessage(name, result, reason) {
+    if (result.levelsGained) return `${reason}，${name}獲得 ${result.amount} 經驗並升為 ${result.level} 星！`;
+    if (result.level >= MAX_LEVEL) return `${name}已經是最高 5 星。`;
+    return `${reason}，${name}獲得 ${result.amount} 經驗（${result.xp}/${result.needed}）。`;
   }
 
   function combatStats(unit, formations = activeGeneralFormations(), unitIndex = state.units.indexOf(unit)) {
@@ -683,8 +741,8 @@
     }
     state.generalCooldowns[formation.id] = formation.cooldown;
     animateGeneralSkill(formation);
-    collectDefeatedEnemies();
-    showStatus(`${formation.name}施放「${formation.skill}」！`);
+    const defeated = collectDefeatedEnemies(formation);
+    showStatus(`${formation.name}施放「${formation.skill}」！${defeated.message ? ` ${defeated.message}` : ""}`);
     render();
   }
 
@@ -753,21 +811,32 @@
       }
       const nextCooldown = 1 / stats.attackSpeed;
       parts.forEach(unit => { unit.cooldown = nextCooldown; });
-      collectDefeatedEnemies();
+      collectDefeatedEnemies(formation);
     });
   }
 
   function applyDamage(enemy, amount) { enemy.health -= amount; }
 
-  function collectDefeatedEnemies() {
+  function collectDefeatedEnemies(killerFormation = null) {
+    let defeatedCount = 0;
+    let totalReward = 0;
     for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
       const enemy = state.enemies[i];
       if (enemy.health > 0) continue;
       state.enemies.splice(i, 1);
       state.food += enemy.reward;
       state.defeated += 1;
-      showStatus(`擊敗${enemy.name}，獲得 ${enemy.reward} 個饅頭。`);
+      defeatedCount += 1;
+      totalReward += enemy.reward;
     }
+    if (!defeatedCount) return { defeatedCount: 0, message: "" };
+    let message = `擊敗 ${defeatedCount} 名敵軍，獲得 ${totalReward} 個饅頭。`;
+    if (killerFormation) {
+      const result = addGeneralExperience(killerFormation, defeatedCount * GENERAL_XP_PER_KILL);
+      message += ` ${experienceGainMessage(killerFormation.name, result, "戰鬥勝利")}`;
+    }
+    showStatus(message);
+    return { defeatedCount, message };
   }
 
   function totalAttack() {
@@ -856,7 +925,7 @@
   }
 
   function renderGeneralFrames(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}-${attackingGeneralKeys.has(formation.key)}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}-${attackingGeneralKeys.has(formation.key)}`).join("|");
     if (dom.generalFrames.dataset.signature === signature) return;
     dom.generalFrames.innerHTML = formations.map(formation => {
       const positions = formation.indexes.map(index => SLOT_LAYOUT[index]);
@@ -867,13 +936,14 @@
       return `<div class="general-frame ${formation.orientation} general-${formation.id}${attackingGeneralKeys.has(formation.key) ? " attacking" : ""}"
         style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
         <span>${formation.name}・${"★".repeat(formation.level)}</span>
+        <div class="general-frame-xp"><i style="width:${generalXpPercent(formation)}%"></i></div>
       </div>`;
     }).join("");
     dom.generalFrames.dataset.signature = signature;
   }
 
   function renderGenerals(formations) {
-    const signature = formations.map(formation => `${formation.key}-${formation.level}`).join("|");
+    const signature = formations.map(formation => `${formation.key}-${formation.level}-${formation.xp}`).join("|");
     if (!formations.length) {
       if (dom.generals.dataset.signature !== "empty") {
         dom.generals.innerHTML = `<p class="general-empty">尚未組成武將：武將字必須上下或左右相鄰，斜角不算。</p>`;
@@ -885,6 +955,7 @@
       dom.generals.innerHTML = formations.map(formation => `<article class="general-card ${formation.id}" data-general-card-key="${formation.key}">
         <div class="general-name"><b>${formation.parts[0]}${formation.orientation === "vertical" ? "<br>" : ""}${formation.parts[1]}</b><span><strong>${formation.name}・${"★".repeat(formation.level)}</strong><small>${formation.passive}</small></span></div>
         <button class="general-skill" type="button" data-general-key="${formation.key}">${formation.skill}</button>
+        <div class="general-xp"><span><i style="width:${generalXpPercent(formation)}%"></i></span><small>${formation.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${formation.xp}/${generalXpNeeded(formation.level)}`}</small></div>
         <p>${formation.skillNote}</p>
       </article>`).join("");
       dom.generals.dataset.signature = signature;
@@ -1059,6 +1130,9 @@
       : null;
     const sleeping = Boolean(unit.generalId && !linkedGeneral);
     const stats = linkedGeneral ? generalCombatStats(linkedGeneral, formations) : combatStats(unit, formations, index);
+    const xpDetail = linkedGeneral
+      ? `<div class="unit-general-xp"><span><i style="width:${generalXpPercent(linkedGeneral)}%"></i></span><strong>${linkedGeneral.level >= MAX_LEVEL ? "經驗已滿" : `經驗 ${linkedGeneral.xp}/${generalXpNeeded(linkedGeneral.level)}`}</strong></div>`
+      : "";
     dom.unitCardContent.innerHTML = `
       <h2 id="unit-modal-title" class="unit-card-title"><b class="${linkedGeneral ? "general-title-glyph" : ""}">${linkedGeneral?.name ?? unit.glyph}</b><span>${linkedGeneral?.name ?? unit.name}<small>${linkedGeneral ? `雙字武將・共同 ${linkedGeneral.level} 星` : `${unit.role}・${unit.level} 星`}</small></span></h2>
       <div class="attribute-grid">
@@ -1067,8 +1141,9 @@
         <div><span>攻擊距離</span><strong>${unit.rangeLabel}距離</strong></div>
         <div><span>攻擊效果</span><strong>${unit.effect}</strong></div>
       </div>
+      ${xpDetail}
       <p class="unit-card-note">${linkedGeneral
-        ? `${linkedGeneral.passive}。必須用另一組同名、同星武將合體升級；拖走其中一字即可拆陣。`
+        ? `${linkedGeneral.passive}。擊殺敵軍會獲得經驗；把相同單字拖到對應文字也能增加經驗。拖走其中一字即可拆陣。`
         : unit.generalId
           ? `💤 沉睡中，單字不能攻擊；${unit.role}。上下或左右相鄰才會甦醒成將，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
