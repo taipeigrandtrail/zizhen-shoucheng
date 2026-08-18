@@ -13,6 +13,7 @@
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
   const DRAG_START_DISTANCE = 12;
+  const DOUBLE_TAP_WINDOW = 450;
   const BOARD_DROP_SLOP = 16;
   const POCKET_DROP_SLOP = 20;
   const GENERAL_XP_PER_KILL = 1;
@@ -26,15 +27,15 @@
     { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeRadius: 29, rangeLabel: "近", effect: "範圍", role: "近距範圍" }
   ];
   const GENERAL_TYPES = [
-    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2,
+    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeRadius: 26, rangeLabel: "近",
       passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "綠龍咆哮，劈斬戰場上所有敵軍" },
-    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22,
+    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeRadius: 28, rangeLabel: "中",
       passive: "槍兵攻擊力 +22%", skill: "咆哮震陣", cooldown: 15, skillNote: "震擊戰場上所有敵軍" },
-    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25,
+    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeRadius: 30, rangeLabel: "中",
       passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "藍龍穿陣，重創最接近軍旗的 3 名敵軍" },
-    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25,
+    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeRadius: 27, rangeLabel: "近",
       passive: "騎兵、槍兵攻擊速度 +25%", skill: "鐵騎衝陣", cooldown: 13, skillNote: "金系鐵騎衝擊最前方 5 名敵軍" },
-    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25,
+    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeRadius: 38, rangeLabel: "遠",
       passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
   const GENERAL_PARTS = [
@@ -112,6 +113,7 @@
   let dragGhost = null;
   let currentDropTarget = null;
   let selectedPocketIndex = null;
+  let lastBoardTap = null;
   const attackingSlots = new Set();
   const attackingGeneralKeys = new Set();
 
@@ -281,6 +283,33 @@
       return;
     }
     openUnitModal(unit, index);
+  }
+
+  function tapBoardSlot(index) {
+    if (!state.running || state.over) return;
+    if (selectedPocketIndex !== null && state.pocket[selectedPocketIndex]) {
+      lastBoardTap = null;
+      inspectBoardSlot(index);
+      return;
+    }
+    if (!state.unlocked[index] || !state.units[index]) {
+      lastBoardTap = null;
+      dom.rangeIndicator.classList.remove("visible");
+      inspectBoardSlot(index);
+      return;
+    }
+    const formations = activeGeneralFormations();
+    const formation = formations.find(item => item.indexes.includes(index));
+    const tapKey = formation?.key ?? `slot-${index}`;
+    const now = performance.now();
+    if (lastBoardTap?.key === tapKey && now - lastBoardTap.at <= DOUBLE_TAP_WINDOW) {
+      lastBoardTap = null;
+      openUnitModal(state.units[index], index);
+      return;
+    }
+    lastBoardTap = { key: tapKey, at: now };
+    showBoardRange(index, formations);
+    showStatus(`${formation?.name ?? `「${state.units[index].glyph}」`}的攻擊範圍；再點一次查看詳細資料。`);
   }
 
   function inspectPocketItem(index) {
@@ -528,6 +557,7 @@
   function pointerDown(event, source, index) {
     if (!state.running || state.over) return;
     if (event.isPrimary === false) return;
+    if (source === "pocket") lastBoardTap = null;
     const item = dragItem(source, index);
     if (pointerDrag) cleanupPointerDrag();
     pointerDrag = {
@@ -582,7 +612,7 @@
       renderBoard();
     } else {
       cleanupPointerDrag();
-      if (drag.source === "board") inspectBoardSlot(drag.index);
+      if (drag.source === "board") tapBoardSlot(drag.index);
       else tapPocketItem(drag.index);
     }
   }
@@ -666,7 +696,10 @@
     dragGhost = null;
     currentDropTarget = null;
     pointerDrag = null;
-    dom.rangeIndicator.classList.remove("visible");
+    if (drag?.dragging) {
+      lastBoardTap = null;
+      dom.rangeIndicator.classList.remove("visible");
+    }
     document.body.classList.remove("is-dragging", "dragging-board", "dragging-pocket");
   }
 
@@ -826,7 +859,8 @@
     return {
       damage: partStats.reduce((sum, stats) => sum + stats.damage, 0),
       attackSpeed: partStats.reduce((sum, stats) => sum + stats.attackSpeed, 0) / partStats.length,
-      rangeRadius: Math.max(...formation.indexes.map(index => state.units[index].rangeRadius)),
+      rangeRadius: formation.rangeRadius,
+      rangeLabel: formation.rangeLabel,
       effect: effectByGeneral[formation.id] ?? "單體",
       attackKind: attackByGeneral[formation.id] ?? "ink"
     };
@@ -1031,7 +1065,7 @@
           ? standbyGeneral
             ? `${unit.name}，${level} 星，沉睡中；同名武將已有一組甦醒，不能攻擊`
             : `${unit.name}，${level} 星，沉睡中，必須與另一個武將字相鄰才能攻擊`
-          : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`;
+          : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}單點看範圍、雙點看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`;
         setRenderedSlot(slot, `unit-${unit.glyph}-${level}`, `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`, label);
       } else {
         setRenderedSlot(slot, "empty", `<span class="glyph">＋</span><span class="stars"></span>`, `已開放空格 ${index + 1}`);
@@ -1244,12 +1278,24 @@
       dom.rangeIndicator.classList.remove("visible");
       return;
     }
-    const position = unitPosition(index);
+    showRangeIndicatorAt(unitPosition(index), unit.rangeRadius);
+  }
+
+  function showRangeIndicatorAt(position, rangeRadius) {
     dom.rangeIndicator.style.left = `${position.x}%`;
     dom.rangeIndicator.style.top = `${position.y}%`;
-    dom.rangeIndicator.style.width = `${unit.rangeRadius * 2}%`;
-    dom.rangeIndicator.style.height = `${unit.rangeRadius * 2}%`;
+    dom.rangeIndicator.style.width = `${rangeRadius * 2}%`;
+    dom.rangeIndicator.style.height = `${rangeRadius * 2}%`;
     dom.rangeIndicator.classList.add("visible");
+  }
+
+  function showBoardRange(index, formations = activeGeneralFormations()) {
+    const unit = state.units[index];
+    if (!unit) return showRangeIndicator(null, null);
+    const formation = formations.find(item => item.indexes.includes(index));
+    if (!formation) return showRangeIndicator(unit, index);
+    const stats = generalCombatStats(formation, formations);
+    showRangeIndicatorAt(generalPosition(formation), stats.rangeRadius);
   }
 
   function openUnitModal(unit, index) {
@@ -1268,8 +1314,8 @@
       <div class="attribute-grid">
         <div><span>攻擊力</span><strong>${sleeping ? "0（沉睡）" : stats.damage.toFixed(1)}</strong></div>
         <div><span>攻擊速度</span><strong>${sleeping ? "—" : `${stats.attackSpeed.toFixed(2)} 次／秒`}</strong></div>
-        <div><span>攻擊距離</span><strong>${unit.rangeLabel}距離</strong></div>
-        <div><span>攻擊效果</span><strong>${unit.effect}</strong></div>
+        <div><span>攻擊距離</span><strong>${linkedGeneral ? stats.rangeLabel : unit.rangeLabel}距離</strong></div>
+        <div><span>攻擊效果</span><strong>${linkedGeneral ? stats.effect : unit.effect}</strong></div>
       </div>
       ${xpDetail}
       <p class="unit-card-note">${linkedGeneral
@@ -1279,7 +1325,7 @@
             ? `💤 同名武將已有一組甦醒，因此這個文字維持沉睡、不能攻擊；可餵給已甦醒的武將增加經驗。`
             : `💤 沉睡中，單字不能攻擊；${unit.role}。上下或左右相鄰才會甦醒成將，斜角不算。`
           : "升星會提高攻擊力；相同文字與相同星級可以合成。"}</p>`;
-    showRangeIndicator(unit, index);
+    showBoardRange(index, formations);
     dom.unitModal.classList.remove("hidden");
   }
 
