@@ -8,6 +8,9 @@
   const REFRESH_COST = 10;
   const MAX_LEVEL = 5;
   const MAX_WAVE = 10;
+  const DRAG_START_DISTANCE = 12;
+  const BOARD_DROP_SLOP = 16;
+  const POCKET_DROP_SLOP = 20;
   const GENERAL_XP_PER_KILL = 1;
   const GENERAL_XP_PER_WORD = 3;
   const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
@@ -138,7 +141,7 @@
     lastFrame = performance.now();
     closeUnitModal();
     dom.overlay.classList.add("hidden");
-    showStatus("先刷新口袋，再把文字拖到 6 個已開放的戰鬥格。");
+    showStatus("先刷新口袋；可直接拖到戰鬥格，或先點文字再點格子部署。");
     renderPocket();
     render();
     cancelAnimationFrame(rafId);
@@ -198,6 +201,13 @@
 
   function inspectBoardSlot(index) {
     if (!state.running || state.over) return;
+    if (selectedPocketIndex !== null && state.pocket[selectedPocketIndex]) {
+      const pocketIndex = selectedPocketIndex;
+      deployPocketItem(pocketIndex, index);
+      if (!state.pocket[pocketIndex]) selectedPocketIndex = null;
+      renderPocket();
+      return;
+    }
     if (!state.unlocked[index]) {
       showStatus("這格尚未開放，需要把口袋裡的鏟子拖到這裡。");
       return;
@@ -454,12 +464,14 @@
     if (!state.running || state.over) return;
     if (event.isPrimary === false) return;
     const item = dragItem(source, index);
+    if (pointerDrag) cleanupPointerDrag();
     pointerDrag = {
       pointerId: event.pointerId, source, index, sourceElement: event.currentTarget,
       startX: event.clientX, startY: event.clientY, dragging: false
     };
     if (item) {
       event.preventDefault();
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_) { /* Safari may reject stale pointers. */ }
     }
   }
 
@@ -468,13 +480,13 @@
     const item = dragItem(pointerDrag.source, pointerDrag.index);
     if (!item) return;
     const travel = Math.hypot(event.clientX - pointerDrag.startX, event.clientY - pointerDrag.startY);
-    if (!pointerDrag.dragging && travel > 8) {
+    if (!pointerDrag.dragging && travel > DRAG_START_DISTANCE) {
       pointerDrag.dragging = true;
       if (pointerDrag.source === "pocket") selectedPocketIndex = null;
       createDragGhost(item);
       pointerDrag.sourceElement.classList.add("drag-source");
       if (pointerDrag.source === "board") showRangeIndicator(item, pointerDrag.index);
-      document.body.classList.add("is-dragging");
+      document.body.classList.add("is-dragging", `dragging-${pointerDrag.source}`);
     }
     if (!pointerDrag.dragging) return;
     event.preventDefault();
@@ -541,23 +553,56 @@
     if (boardSlot) return { area: "board", index: Number(boardSlot.dataset.index) };
     const pocketSlot = element?.closest?.(".pocket-item");
     if (pocketSlot) return { area: "pocket", index: Number(pocketSlot.dataset.index) };
-    return null;
+
+    let nearest = null;
+    const candidates = [
+      ...[...dom.board.querySelectorAll(".slot")].map(slot => ({ area: "board", element: slot, slop: BOARD_DROP_SLOP })),
+      ...[...dom.pocket.querySelectorAll(".pocket-item")].map(slot => ({ area: "pocket", element: slot, slop: POCKET_DROP_SLOP }))
+    ];
+    candidates.forEach(candidate => {
+      const rect = candidate.element.getBoundingClientRect();
+      const dx = Math.max(rect.left - x, 0, x - rect.right);
+      const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+      const distance = Math.hypot(dx, dy);
+      if (distance <= candidate.slop && (!nearest || distance < nearest.distance)) {
+        nearest = {
+          area: candidate.area,
+          index: Number(candidate.element.dataset.index),
+          distance
+        };
+      }
+    });
+    return nearest ? { area: nearest.area, index: nearest.index } : null;
   }
 
   function updateDropTarget(x, y) {
-    currentDropTarget = dropTargetAtPoint(x, y);
-    renderBoard();
-    renderPocket();
+    const nextTarget = dropTargetAtPoint(x, y);
+    if (nextTarget?.area === currentDropTarget?.area && nextTarget?.index === currentDropTarget?.index) return;
+    dropTargetElement(currentDropTarget)?.classList.remove("drop-target");
+    currentDropTarget = nextTarget;
+    dropTargetElement(currentDropTarget)?.classList.add("drop-target");
+  }
+
+  function dropTargetElement(target) {
+    if (!target) return null;
+    return target.area === "board"
+      ? dom.board.querySelector(`.slot[data-index="${target.index}"]`)
+      : dom.pocket.querySelector(`.pocket-item[data-index="${target.index}"]`);
   }
 
   function cleanupPointerDrag() {
+    const drag = pointerDrag;
+    if (drag?.sourceElement?.hasPointerCapture?.(drag.pointerId)) {
+      try { drag.sourceElement.releasePointerCapture(drag.pointerId); } catch (_) { /* Pointer already ended. */ }
+    }
     pointerDrag?.sourceElement?.classList.remove("drag-source");
+    dropTargetElement(currentDropTarget)?.classList.remove("drop-target");
     dragGhost?.remove();
     dragGhost = null;
     currentDropTarget = null;
     pointerDrag = null;
     dom.rangeIndicator.classList.remove("visible");
-    document.body.classList.remove("is-dragging");
+    document.body.classList.remove("is-dragging", "dragging-board", "dragging-pocket");
   }
 
   function updateSpawning(delta) {
@@ -906,22 +951,28 @@
       if (currentDropTarget?.area === "board" && currentDropTarget.index === index) classes.push("drop-target");
       slot.className = classes.join(" ");
       if (!unlocked) {
-        slot.innerHTML = `<span class="glyph">鎖</span><span class="stars"></span>`;
-        slot.setAttribute("aria-label", `鎖定格 ${index + 1}`);
+        setRenderedSlot(slot, "locked", `<span class="glyph">鎖</span><span class="stars"></span>`, `鎖定格 ${index + 1}`);
       } else if (unit) {
         const stats = linkedGeneral ? generalCombatStats(linkedGeneral, formations) : combatStats(unit, formations, index);
         const level = linkedGeneral?.level ?? unit.level;
-        slot.innerHTML = `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`;
-        slot.setAttribute("aria-label", unit.generalId && !linkedGeneral
+        const label = unit.generalId && !linkedGeneral
           ? standbyGeneral
             ? `${unit.name}，${level} 星，沉睡中；同名武將已有一組甦醒，不能攻擊`
             : `${unit.name}，${level} 星，沉睡中，必須與另一個武將字相鄰才能攻擊`
-          : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`);
+          : `${linkedGeneral ? `${linkedGeneral.name}共同` : unit.name + "，"}${level} 星，${linkedGeneral ? "拖走其中一字可拆陣，" : ""}點擊查看屬性，可拖回口袋，攻擊 ${stats.damage.toFixed(1)}`;
+        setRenderedSlot(slot, `unit-${unit.glyph}-${level}`, `<span class="glyph">${unit.glyph}</span><span class="stars">${"★".repeat(level)}</span>`, label);
       } else {
-        slot.innerHTML = `<span class="glyph">＋</span><span class="stars"></span>`;
-        slot.setAttribute("aria-label", `已開放空格 ${index + 1}`);
+        setRenderedSlot(slot, "empty", `<span class="glyph">＋</span><span class="stars"></span>`, `已開放空格 ${index + 1}`);
       }
     });
+  }
+
+  function setRenderedSlot(slot, key, markup, label) {
+    if (slot.dataset.renderKey !== key) {
+      slot.innerHTML = markup;
+      slot.dataset.renderKey = key;
+    }
+    if (slot.getAttribute("aria-label") !== label) slot.setAttribute("aria-label", label);
   }
 
   function generalPartClass(formation, index) {
@@ -986,16 +1037,13 @@
       const selected = selectedPocketIndex === index;
       if (!item) {
         slot.className = `pocket-item used${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
-        slot.innerHTML = `<span class="glyph">·</span><span class="label">等待刷新</span>`;
-        slot.setAttribute("aria-label", `口袋 ${index + 1}，空`);
+        setRenderedSlot(slot, "pocket-empty", `<span class="glyph">·</span><span class="label">等待刷新</span>`, `口袋 ${index + 1}，空`);
       } else if (item.kind === "shovel") {
         slot.className = `pocket-item shovel${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
-        slot.innerHTML = `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`;
-        slot.setAttribute("aria-label", `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
+        setRenderedSlot(slot, "pocket-shovel", `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`, `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
       } else {
         slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}${selected ? " selected" : ""}`;
-        slot.innerHTML = `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`;
-        slot.setAttribute("aria-label", `口袋 ${index + 1}，${item.name}，${item.level} 星，${selected ? "已選取，" : ""}可點擊或拖曳合體`);
+        setRenderedSlot(slot, `pocket-${item.glyph}-${item.level}`, `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`, `口袋 ${index + 1}，${item.name}，${item.level} 星，${selected ? "已選取，" : ""}可點擊或拖曳合體`);
       }
     });
   }
@@ -1028,8 +1076,8 @@
   function unitPosition(index) {
     const [column, row] = SLOT_LAYOUT[index];
     return {
-      x: 16 + (column - 0.5) * (68 / BOARD_COLUMNS),
-      y: 16 + (row - 0.5) * (68 / BOARD_ROWS)
+      x: 12 + (column - 0.5) * (76 / BOARD_COLUMNS),
+      y: 12 + (row - 0.5) * (76 / BOARD_ROWS)
     };
   }
 
