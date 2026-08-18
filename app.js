@@ -959,9 +959,12 @@
   function animateGeneralSkill(formation) {
     const effect = document.createElement("div");
     effect.className = `general-skill-fx ${formation.id}`;
+    const blueDragonSegments = Array.from({ length: 7 }, (_, index) =>
+      `<span class="dragon-segment segment-${index + 1}"><img src="${GENERAL_SKILL_ART.zhaoyun}" alt=""></span>`
+    ).join("");
     const visuals = {
       guanyu: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.guanyu}" alt=""></div>`,
-      zhaoyun: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.zhaoyun}" alt=""></div>`,
+      zhaoyun: `<div class="skill-visual"><div class="dragon-swim">${blueDragonSegments}</div></div>`,
       zhangfei: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.zhangfei}" alt=""></div>`,
       machao: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.machao}" alt=""></div>`,
       huangzhong: `<div class="skill-visual arrow-volley"><img class="skill-arrow main" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary one" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary two" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary three" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary four" src="${GENERAL_SKILL_ART.huangzhong}" alt=""></div>`
