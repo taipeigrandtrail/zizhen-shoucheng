@@ -21,34 +21,34 @@
   const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
   const INITIAL_UNLOCKED = new Set([0, 1, 2, 3, 4, 5]);
   const UNIT_TYPES = [
-    { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeRadius: 27, rangeLabel: "近", effect: "單體", role: "近距快攻" },
-    { kind: "unit", glyph: "槍", weapon: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeRadius: 39, rangeLabel: "中", effect: "穿透", role: "中距穿透" },
-    { kind: "unit", glyph: "弓", weapon: "弓", name: "弓兵", damage: 6, attackSpeed: 1.6, rangeRadius: 56, rangeLabel: "遠", effect: "單體", role: "遠距連射" },
-    { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeRadius: 29, rangeLabel: "近", effect: "範圍", role: "近距範圍" }
+    { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeCells: 1, effect: "單體", role: "近距快攻" },
+    { kind: "unit", glyph: "槍", weapon: "槍", name: "槍兵", damage: 12, attackSpeed: 0.8, rangeCells: 2, effect: "穿透", role: "中距穿透" },
+    { kind: "unit", glyph: "弓", weapon: "弓", name: "弓兵", damage: 6, attackSpeed: 1.6, rangeCells: 3, effect: "單體", role: "遠距連射" },
+    { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeCells: 2, effect: "範圍", role: "中距範圍" }
   ];
   const GENERAL_TYPES = [
-    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeRadius: 26, rangeLabel: "近",
+    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeCells: 2,
       passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "綠龍咆哮，劈斬戰場上所有敵軍" },
-    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeRadius: 28, rangeLabel: "中",
+    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeCells: 1,
       passive: "槍兵攻擊力 +22%", skill: "咆哮震陣", cooldown: 15, skillNote: "震擊戰場上所有敵軍" },
-    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeRadius: 30, rangeLabel: "中",
+    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeCells: 2,
       passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "藍龍穿陣，重創最接近軍旗的 3 名敵軍" },
-    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeRadius: 27, rangeLabel: "近",
+    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeCells: 2,
       passive: "騎兵、槍兵攻擊速度 +25%", skill: "鐵騎衝陣", cooldown: 13, skillNote: "金系鐵騎衝擊最前方 5 名敵軍" },
-    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeRadius: 38, rangeLabel: "遠",
+    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeCells: 3,
       passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
   const GENERAL_PARTS = [
-    { kind: "unit", glyph: "趙", weapon: "槍", generalId: "zhaoyun", name: "武將字・趙", damage: 10, attackSpeed: 0.9, rangeRadius: 41, rangeLabel: "中", effect: "穿透", role: "與「雲」相鄰可成將", attackKind: "spear" },
-    { kind: "unit", glyph: "雲", weapon: "槍", generalId: "zhaoyun", name: "武將字・雲", damage: 8, attackSpeed: 1.05, rangeRadius: 38, rangeLabel: "中", effect: "單體", role: "與「趙」相鄰可成將", attackKind: "spear" },
-    { kind: "unit", glyph: "關", weapon: "刀", generalId: "guanyu", name: "武將字・關", damage: 13, attackSpeed: 0.72, rangeRadius: 30, rangeLabel: "近", effect: "單體", role: "與「羽」相鄰可成將", attackKind: "blade" },
-    { kind: "unit", glyph: "羽", weapon: "騎", generalId: "guanyu", name: "武將字・羽", damage: 11, attackSpeed: 0.88, rangeRadius: 34, rangeLabel: "近", effect: "範圍", role: "與「關」相鄰可成將", attackKind: "cavalry" },
-    { kind: "unit", glyph: "張", weapon: "槍", generalId: "zhangfei", name: "武將字・張", damage: 12, attackSpeed: 0.78, rangeRadius: 36, rangeLabel: "中", effect: "穿透", role: "與「飛」相鄰可成將", attackKind: "spear" },
-    { kind: "unit", glyph: "飛", weapon: "槍", generalId: "zhangfei", name: "武將字・飛", damage: 10, attackSpeed: 0.9, rangeRadius: 35, rangeLabel: "中", effect: "單體", role: "與「張」相鄰可成將", attackKind: "spear" },
-    { kind: "unit", glyph: "馬", weapon: "騎", generalId: "machao", name: "武將字・馬", damage: 13, attackSpeed: 0.82, rangeRadius: 33, rangeLabel: "近", effect: "範圍", role: "與「超」相鄰可成將", attackKind: "cavalry" },
-    { kind: "unit", glyph: "超", weapon: "槍", generalId: "machao", name: "武將字・超", damage: 12, attackSpeed: 0.92, rangeRadius: 38, rangeLabel: "中", effect: "穿透", role: "與「馬」相鄰可成將", attackKind: "spear" },
-    { kind: "unit", glyph: "黃", weapon: "弓", generalId: "huangzhong", name: "武將字・黃", damage: 7, attackSpeed: 1.35, rangeRadius: 52, rangeLabel: "遠", effect: "單體", role: "與「忠」相鄰可成將", attackKind: "bow" },
-    { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeRadius: 48, rangeLabel: "遠", effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" }
+    { kind: "unit", glyph: "趙", weapon: "槍", generalId: "zhaoyun", name: "武將字・趙", damage: 10, attackSpeed: 0.9, rangeCells: 2, effect: "穿透", role: "與「雲」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "雲", weapon: "槍", generalId: "zhaoyun", name: "武將字・雲", damage: 8, attackSpeed: 1.05, rangeCells: 2, effect: "單體", role: "與「趙」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "關", weapon: "刀", generalId: "guanyu", name: "武將字・關", damage: 13, attackSpeed: 0.72, rangeCells: 1, effect: "單體", role: "與「羽」相鄰可成將", attackKind: "blade" },
+    { kind: "unit", glyph: "羽", weapon: "騎", generalId: "guanyu", name: "武將字・羽", damage: 11, attackSpeed: 0.88, rangeCells: 2, effect: "範圍", role: "與「關」相鄰可成將", attackKind: "cavalry" },
+    { kind: "unit", glyph: "張", weapon: "槍", generalId: "zhangfei", name: "武將字・張", damage: 12, attackSpeed: 0.78, rangeCells: 2, effect: "穿透", role: "與「飛」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "飛", weapon: "槍", generalId: "zhangfei", name: "武將字・飛", damage: 10, attackSpeed: 0.9, rangeCells: 2, effect: "單體", role: "與「張」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "馬", weapon: "騎", generalId: "machao", name: "武將字・馬", damage: 13, attackSpeed: 0.82, rangeCells: 2, effect: "範圍", role: "與「超」相鄰可成將", attackKind: "cavalry" },
+    { kind: "unit", glyph: "超", weapon: "槍", generalId: "machao", name: "武將字・超", damage: 12, attackSpeed: 0.92, rangeCells: 2, effect: "穿透", role: "與「馬」相鄰可成將", attackKind: "spear" },
+    { kind: "unit", glyph: "黃", weapon: "弓", generalId: "huangzhong", name: "武將字・黃", damage: 7, attackSpeed: 1.35, rangeCells: 3, effect: "單體", role: "與「忠」相鄰可成將", attackKind: "bow" },
+    { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeCells: 3, effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" }
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
   const MAP_TYPES = [
@@ -580,7 +580,7 @@
       if (pointerDrag.source === "pocket") selectedPocketIndex = null;
       createDragGhost(item);
       pointerDrag.sourceElement.classList.add("drag-source");
-      if (pointerDrag.source === "board") showRangeIndicator(item, pointerDrag.index);
+      if (pointerDrag.source === "board") showBoardRange(pointerDrag.index);
       document.body.classList.add("is-dragging", `dragging-${pointerDrag.source}`);
     }
     if (!pointerDrag.dragging) return;
@@ -859,8 +859,7 @@
     return {
       damage: partStats.reduce((sum, stats) => sum + stats.damage, 0),
       attackSpeed: partStats.reduce((sum, stats) => sum + stats.attackSpeed, 0) / partStats.length,
-      rangeRadius: formation.rangeRadius,
-      rangeLabel: formation.rangeLabel,
+      rangeCells: formation.rangeCells,
       effect: effectByGeneral[formation.id] ?? "單體",
       attackKind: attackByGeneral[formation.id] ?? "ink"
     };
@@ -931,7 +930,7 @@
       if (unit.cooldown > 0) return;
       const eligible = state.enemies
         .map(enemy => ({ enemy }))
-        .filter(item => distance(unitPosition(unitIndex), routePoint(item.enemy.progress)) <= unit.rangeRadius)
+        .filter(item => gridDistance(unitPosition(unitIndex), routePoint(item.enemy.progress)) <= unit.rangeCells)
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       const stats = combatStats(unit, formations);
@@ -952,10 +951,9 @@
       parts.forEach(unit => { unit.cooldown = cooldown; });
       if (cooldown > 0) return;
       const stats = generalCombatStats(formation, formations);
-      const center = generalPosition(formation);
       const eligible = state.enemies
         .map(enemy => ({ enemy }))
-        .filter(item => distance(center, routePoint(item.enemy.progress)) <= stats.rangeRadius)
+        .filter(item => formationGridDistance(formation, routePoint(item.enemy.progress)) <= stats.rangeCells)
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       animateGeneralAttack(formation, eligible[0].enemy, stats.attackKind);
@@ -1197,7 +1195,16 @@
     };
   }
 
-  function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function gridDistance(a, b) {
+    return Math.hypot(
+      (a.x - b.x) / (BOARD_WIDTH / BOARD_COLUMNS),
+      (a.y - b.y) / (BOARD_HEIGHT / BOARD_ROWS)
+    );
+  }
+
+  function formationGridDistance(formation, target) {
+    return Math.min(...formation.indexes.map(index => gridDistance(unitPosition(index), target)));
+  }
 
   function unitAttackKind(unit) {
     return unit?.attackKind ?? ({ "弓": "bow", "刀": "blade", "槍": "spear", "騎": "cavalry" })[unit?.glyph] ?? "ink";
@@ -1278,14 +1285,14 @@
       dom.rangeIndicator.classList.remove("visible");
       return;
     }
-    showRangeIndicatorAt(unitPosition(index), unit.rangeRadius);
+    showRangeIndicatorAt(unitPosition(index), unit.rangeCells);
   }
 
-  function showRangeIndicatorAt(position, rangeRadius) {
+  function showRangeIndicatorAt(position, rangeCells, columnSpan = 0, rowSpan = 0) {
     dom.rangeIndicator.style.left = `${position.x}%`;
     dom.rangeIndicator.style.top = `${position.y}%`;
-    dom.rangeIndicator.style.width = `${rangeRadius * 2}%`;
-    dom.rangeIndicator.style.height = `${rangeRadius * 2}%`;
+    dom.rangeIndicator.style.width = `${(rangeCells * 2 + columnSpan) * (BOARD_WIDTH / BOARD_COLUMNS)}%`;
+    dom.rangeIndicator.style.height = `${(rangeCells * 2 + rowSpan) * (BOARD_HEIGHT / BOARD_ROWS)}%`;
     dom.rangeIndicator.classList.add("visible");
   }
 
@@ -1295,7 +1302,13 @@
     const formation = formations.find(item => item.indexes.includes(index));
     if (!formation) return showRangeIndicator(unit, index);
     const stats = generalCombatStats(formation, formations);
-    showRangeIndicatorAt(generalPosition(formation), stats.rangeRadius);
+    const [firstPosition, secondPosition] = formation.indexes.map(formationIndex => SLOT_LAYOUT[formationIndex]);
+    showRangeIndicatorAt(
+      generalPosition(formation),
+      stats.rangeCells,
+      Math.abs(firstPosition[0] - secondPosition[0]),
+      Math.abs(firstPosition[1] - secondPosition[1])
+    );
   }
 
   function openUnitModal(unit, index) {
@@ -1314,7 +1327,7 @@
       <div class="attribute-grid">
         <div><span>攻擊力</span><strong>${sleeping ? "0（沉睡）" : stats.damage.toFixed(1)}</strong></div>
         <div><span>攻擊速度</span><strong>${sleeping ? "—" : `${stats.attackSpeed.toFixed(2)} 次／秒`}</strong></div>
-        <div><span>攻擊距離</span><strong>${linkedGeneral ? stats.rangeLabel : unit.rangeLabel}距離</strong></div>
+        <div><span>攻擊距離</span><strong>${linkedGeneral ? stats.rangeCells : unit.rangeCells} 個文字格</strong></div>
         <div><span>攻擊效果</span><strong>${linkedGeneral ? stats.effect : unit.effect}</strong></div>
       </div>
       ${xpDetail}
