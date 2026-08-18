@@ -27,15 +27,15 @@
     { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeCells: 2, effect: "範圍", role: "中距範圍" }
   ];
   const GENERAL_TYPES = [
-    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeCells: 2,
+    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeCells: 3,
       passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "綠龍咆哮，劈斬戰場上所有敵軍" },
-    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeCells: 1,
+    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeCells: 2,
       passive: "槍兵攻擊力 +22%", skill: "咆哮震陣", cooldown: 15, skillNote: "震擊戰場上所有敵軍" },
-    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeCells: 2,
+    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeCells: 3,
       passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "藍龍穿陣，重創最接近軍旗的 3 名敵軍" },
-    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeCells: 2,
+    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeCells: 3,
       passive: "騎兵、槍兵攻擊速度 +25%", skill: "鐵騎衝陣", cooldown: 13, skillNote: "金系鐵騎衝擊最前方 5 名敵軍" },
-    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeCells: 3,
+    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeCells: 4,
       passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
   const GENERAL_PARTS = [
@@ -923,6 +923,7 @@
 
   function updateUnitAttacks(delta) {
     const formations = activeGeneralFormations();
+    const rangeMetrics = battlefieldRangeMetrics();
     const linkedIndexes = new Set(formations.flatMap(formation => formation.indexes));
     state.units.forEach((unit, unitIndex) => {
       if (!unit || unit.generalId || linkedIndexes.has(unitIndex)) return;
@@ -930,7 +931,7 @@
       if (unit.cooldown > 0) return;
       const eligible = state.enemies
         .map(enemy => ({ enemy }))
-        .filter(item => gridDistance(unitPosition(unitIndex), routePoint(item.enemy.progress)) <= unit.rangeCells)
+        .filter(item => rangeDistanceInCells(unitPosition(unitIndex), routePoint(item.enemy.progress), rangeMetrics) <= unit.rangeCells)
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       const stats = combatStats(unit, formations);
@@ -953,7 +954,7 @@
       const stats = generalCombatStats(formation, formations);
       const eligible = state.enemies
         .map(enemy => ({ enemy }))
-        .filter(item => formationGridDistance(formation, routePoint(item.enemy.progress)) <= stats.rangeCells)
+        .filter(item => rangeDistanceInCells(generalPosition(formation), routePoint(item.enemy.progress), rangeMetrics) <= stats.rangeCells)
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       animateGeneralAttack(formation, eligible[0].enemy, stats.attackKind);
@@ -1195,15 +1196,17 @@
     };
   }
 
-  function gridDistance(a, b) {
-    return Math.hypot(
-      (a.x - b.x) / (BOARD_WIDTH / BOARD_COLUMNS),
-      (a.y - b.y) / (BOARD_HEIGHT / BOARD_ROWS)
-    );
+  function battlefieldRangeMetrics() {
+    const rect = dom.battlefield.getBoundingClientRect();
+    const cellWidth = rect.width * (BOARD_WIDTH / 100) / BOARD_COLUMNS;
+    const cellHeight = rect.height * (BOARD_HEIGHT / 100) / BOARD_ROWS;
+    return { width: rect.width, height: rect.height, cellSize: Math.max(cellWidth, cellHeight) };
   }
 
-  function formationGridDistance(formation, target) {
-    return Math.min(...formation.indexes.map(index => gridDistance(unitPosition(index), target)));
+  function rangeDistanceInCells(a, b, metrics = battlefieldRangeMetrics()) {
+    const dx = (a.x - b.x) / 100 * metrics.width;
+    const dy = (a.y - b.y) / 100 * metrics.height;
+    return Math.hypot(dx, dy) / metrics.cellSize;
   }
 
   function unitAttackKind(unit) {
@@ -1288,11 +1291,12 @@
     showRangeIndicatorAt(unitPosition(index), unit.rangeCells);
   }
 
-  function showRangeIndicatorAt(position, rangeCells, columnSpan = 0, rowSpan = 0) {
+  function showRangeIndicatorAt(position, rangeCells) {
+    const diameter = rangeCells * 2 * battlefieldRangeMetrics().cellSize;
     dom.rangeIndicator.style.left = `${position.x}%`;
     dom.rangeIndicator.style.top = `${position.y}%`;
-    dom.rangeIndicator.style.width = `${(rangeCells * 2 + columnSpan) * (BOARD_WIDTH / BOARD_COLUMNS)}%`;
-    dom.rangeIndicator.style.height = `${(rangeCells * 2 + rowSpan) * (BOARD_HEIGHT / BOARD_ROWS)}%`;
+    dom.rangeIndicator.style.width = `${diameter}px`;
+    dom.rangeIndicator.style.height = `${diameter}px`;
     dom.rangeIndicator.classList.add("visible");
   }
 
@@ -1302,13 +1306,7 @@
     const formation = formations.find(item => item.indexes.includes(index));
     if (!formation) return showRangeIndicator(unit, index);
     const stats = generalCombatStats(formation, formations);
-    const [firstPosition, secondPosition] = formation.indexes.map(formationIndex => SLOT_LAYOUT[formationIndex]);
-    showRangeIndicatorAt(
-      generalPosition(formation),
-      stats.rangeCells,
-      Math.abs(firstPosition[0] - secondPosition[0]),
-      Math.abs(firstPosition[1] - secondPosition[1])
-    );
+    showRangeIndicatorAt(generalPosition(formation), stats.rangeCells);
   }
 
   function openUnitModal(unit, index) {
