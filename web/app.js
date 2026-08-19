@@ -18,13 +18,8 @@
   const POCKET_DROP_SLOP = 20;
   const GENERAL_XP_PER_KILL = 1;
   const GENERAL_XP_PER_WORD = 3;
-  const GENERAL_XP_TO_NEXT = [0, 10, 18, 30, 45];
-  const ENEMY_ELITES_AT = new Set([4, 7]);
-  const ENEMY_COUNTS_BY_WAVE = [7, 9, 11, 12, 13, 14, 16, 17, 18, 13];
-  const ENEMY_BASE_HEALTH_BY_WAVE = [50, 70, 100, 135, 180, 235, 300, 380, 480, 600];
-  const CHAPTER_HEALTH_MULTIPLIER = { earth: 1.00, water: 1.08, fire: 1.16, metal: 1.25, wood: 1.35 };
-  const ELEMENT_HEALTH_MULTIPLIER = { metal: 1.00, wood: 0.95, water: 1.00, fire: 0.90, earth: 1.15 };
-  const ELEMENT_SPEED_MULTIPLIER = { metal: 0.94, wood: 1.00, water: 1.05, fire: 1.15, earth: 0.88 };
+  const GENERAL_XP_TO_NEXT = [0, 6, 10, 16, 24];
+  const ENEMY_ELITES_AT = new Set([3, 6, 9]);
   const INITIAL_UNLOCKED = new Set([0, 1, 2, 3, 4, 5]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeCells: 1, effect: "單體", role: "近距快攻" },
@@ -33,25 +28,22 @@
     { kind: "unit", glyph: "騎", weapon: "騎", name: "騎兵", damage: 18, attackSpeed: 0.55, rangeCells: 2, effect: "範圍", role: "中距範圍" }
   ];
   const GENERAL_TYPES = [
-    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], skillGlyph: "關", weapons: ["刀"], rangeCells: 3,
-      passive: "範圍清兵", skill: "龍嘯破軍", cooldown: 36, skillNote: "由關羽字陣向全場敵軍橫掃" },
-    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], skillGlyph: "張", weapons: ["槍"], rangeCells: 2,
-      passive: "控場阻敵", skill: "當陽震岳", cooldown: 40, skillNote: "由張飛字陣沿敵軍路線擴散震波" },
-    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], skillGlyph: "趙", weapons: ["槍"], rangeCells: 3,
-      passive: "快速穿透", skill: "游龍穿陣", cooldown: 30, skillNote: "由趙雲字陣依序穿過最前方 5 名敵軍" },
-    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], skillGlyph: "馬", weapons: ["騎"], rangeCells: 3,
-      passive: "範圍追擊", skill: "神威踏陣", cooldown: 32, skillNote: "由馬超字陣衝擊最前方 6 名敵軍並震退" },
-    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], skillGlyph: "黃", weapons: ["弓"], rangeCells: 4,
-      passive: "菁英／首領狙擊", skill: "烈弓連珠", cooldown: 34, skillNote: "主箭與四支副箭優先集中菁英或首領" },
-    { id: "lijing", element: "none", name: "李竟", parts: ["李", "竟"], skillGlyph: "竟", weapons: ["筆"], rangeCells: 3,
-      passive: "守字初心：加快其他武將技能冷卻", skill: "萬字歸名", cooldown: 52,
-      skillNote: "由李竟字陣向全場擴散金色墨水波紋；冷卻期間可施放偷天改字" }
+    { id: "guanyu", element: "wood", name: "關羽", parts: ["關", "羽"], weapons: ["刀", "騎"], damageMultiplier: 1.2, rangeCells: 3,
+      passive: "刀兵、騎兵攻擊力 +20%", skill: "青龍偃月", cooldown: 14, skillNote: "綠龍咆哮，劈斬戰場上所有敵軍" },
+    { id: "zhangfei", element: "earth", name: "張飛", parts: ["張", "飛"], weapons: ["槍"], damageMultiplier: 1.22, rangeCells: 2,
+      passive: "槍兵攻擊力 +22%", skill: "咆哮震陣", cooldown: 15, skillNote: "震擊戰場上所有敵軍" },
+    { id: "zhaoyun", element: "water", name: "趙雲", parts: ["趙", "雲"], weapons: ["槍"], damageMultiplier: 1.25, rangeCells: 3,
+      passive: "槍兵攻擊力 +25%", skill: "龍膽突陣", cooldown: 12, skillNote: "藍龍穿陣，重創最接近軍旗的 3 名敵軍" },
+    { id: "machao", element: "metal", name: "馬超", parts: ["馬", "超"], weapons: ["騎", "槍"], speedMultiplier: 1.25, rangeCells: 3,
+      passive: "騎兵、槍兵攻擊速度 +25%", skill: "鐵騎衝陣", cooldown: 13, skillNote: "金系鐵騎衝擊最前方 5 名敵軍" },
+    { id: "huangzhong", element: "fire", name: "黃忠", parts: ["黃", "忠"], weapons: ["弓"], speedMultiplier: 1.25, rangeCells: 4,
+      passive: "弓兵攻擊速度 +25%", skill: "多重火箭", cooldown: 11, skillNote: "主箭先發，副箭依序清場" }
   ];
   const GENERAL_SKILL_ART = {
     guanyu: "assets/vfx/guanyu-green-dragon.png",
     zhaoyun: "assets/vfx/zhaoyun-blue-dragon.png",
     zhangfei: "assets/vfx/zhangfei-golden-quake.png",
-    machao: "assets/vfx/machao-white-tiger-v2.png",
+    machao: "assets/vfx/machao-metal-charge.png",
     huangzhong: "assets/vfx/huangzhong-fire-arrow.png"
   };
   const GENERAL_PARTS = [
@@ -64,17 +56,15 @@
     { kind: "unit", glyph: "馬", weapon: "騎", generalId: "machao", name: "武將字・馬", damage: 13, attackSpeed: 0.82, rangeCells: 2, effect: "範圍", role: "與「超」相鄰可成將", attackKind: "cavalry" },
     { kind: "unit", glyph: "超", weapon: "槍", generalId: "machao", name: "武將字・超", damage: 12, attackSpeed: 0.92, rangeCells: 2, effect: "穿透", role: "與「馬」相鄰可成將", attackKind: "spear" },
     { kind: "unit", glyph: "黃", weapon: "弓", generalId: "huangzhong", name: "武將字・黃", damage: 7, attackSpeed: 1.35, rangeCells: 3, effect: "單體", role: "與「忠」相鄰可成將", attackKind: "bow" },
-    { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeCells: 3, effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" },
-    { kind: "unit", glyph: "李", weapon: "筆", generalId: "lijing", name: "武將字・李", damage: 6, attackSpeed: 0.9, rangeCells: 3, effect: "單體", role: "與「竟」相鄰可成將", attackKind: "ink" },
-    { kind: "unit", glyph: "竟", weapon: "筆", generalId: "lijing", name: "武將字・竟", damage: 6, attackSpeed: 0.9, rangeCells: 3, effect: "單體", role: "與「李」相鄰可成將", attackKind: "ink" }
+    { kind: "unit", glyph: "忠", weapon: "弓", generalId: "huangzhong", name: "武將字・忠", damage: 9, attackSpeed: 1.15, rangeCells: 3, effect: "單體", role: "與「黃」相鄰可成將", attackKind: "bow" }
   ];
   const SHOVEL = { kind: "shovel", glyph: "鏟", name: "鏟子" };
   const ENEMY_TYPES = {
-    metal: { element: "金", commonGlyph: "甲", eliteGlyph: "鋼", eliteName: "鋼甲印", bossGlyph: "鎧", bossName: "鎧印首領" },
-    wood: { element: "木", commonGlyph: "藤", eliteGlyph: "枝", eliteName: "纏枝印", bossGlyph: "森", bossName: "森印首領" },
-    water: { element: "水", commonGlyph: "流", eliteGlyph: "漩", eliteName: "漩水印", bossGlyph: "潮", bossName: "潮印首領" },
-    fire: { element: "火", commonGlyph: "炎", eliteGlyph: "焰", eliteName: "烈焰印", bossGlyph: "燼", bossName: "燼印首領" },
-    earth: { element: "土", commonGlyph: "岩", eliteGlyph: "壘", eliteName: "岩壘印", bossGlyph: "岳", bossName: "岳印首領" }
+    metal: { element: "金", eliteGlyph: "鋼", eliteName: "鋼甲印", bossGlyph: "鎧", bossName: "鎧印首領" },
+    wood: { element: "木", eliteGlyph: "枝", eliteName: "纏枝印", bossGlyph: "森", bossName: "森印首領" },
+    water: { element: "水", eliteGlyph: "游", eliteName: "游水印", bossGlyph: "潮", bossName: "潮印首領" },
+    fire: { element: "火", eliteGlyph: "熔", eliteName: "熔火印", bossGlyph: "爐", bossName: "爐印首領" },
+    earth: { element: "土", eliteGlyph: "壘", eliteName: "岩壘印", bossGlyph: "岳", bossName: "岳印首領" }
   };
   const ENEMY_ART = {
     elite: {
@@ -93,8 +83,8 @@
       route: [[1,10],[5,10],[5,8],[2,8],[2,6],[7,6],[7,4],[4,4],[4,2],[8,2],[8,1]],
       slots: [[1,6],[1,7],[3,5],[4,5],[3,2],[3,3],[8,6],[8,5],[9,5],[4,11],[5,3],[6,3],[7,3],[9,2],[1,8],[9,1],[5,7],[6,7],[9,3],[1,9],[2,9],[3,9],[4,9],[5,11]] },
     { id: "wood", element: "木", name: "青藤林", background: "assets/maps/wood-grove.jpg",
-      route: [[8,11],[8,10],[8,9],[8,8],[7,8],[6,8],[5,8],[4,8],[3,8],[2,8],[2,7],[2,6],[3,6],[3,5],[4,5],[5,5],[5,4],[5,3],[5,2],[4,2],[3,2],[2,2],[1,2],[1,1]],
-      slots: [[2,3],[2,4],[3,3],[3,4],[4,3],[4,4],[2,9],[2,5],[2,1],[3,9],[3,7],[3,1],[4,9],[4,7],[4,6],[4,1],[5,9],[5,7],[5,6],[5,1],[6,5],[6,4],[7,7],[8,7]] },
+      route: [[5,11],[5,9],[2,9],[2,6],[4,6],[4,2],[6,2],[6,6],[8,6],[8,2],[9,2],[9,1]],
+      slots: [[8,7],[7,7],[4,10],[3,10],[5,6],[5,5],[6,8],[5,4],[8,1],[2,5],[3,7],[9,3],[2,10],[9,4],[5,3],[3,2],[7,2],[3,3],[7,1],[3,8],[9,5],[3,5],[5,8],[4,11]] },
     { id: "water", element: "水", name: "水澤道", background: "assets/maps/water-marsh.jpg",
       route: [[1,11],[5,11],[5,9],[8,9],[8,7],[3,7],[3,5],[7,5],[7,3],[9,3],[9,1]],
       slots: [[9,8],[9,9],[4,9],[4,10],[5,6],[6,6],[4,4],[7,6],[9,7],[3,4],[8,4],[9,4],[7,10],[4,8],[4,6],[6,11],[1,10],[2,10],[3,10],[6,10],[8,1],[8,2],[7,2],[3,8]] },
@@ -140,8 +130,7 @@
     dialogList: document.querySelector("#dialog-list"), dialogDetail: document.querySelector("#dialog-detail"),
     mapSelect: document.querySelector("#map-select"),
     start: document.querySelector("#start"), unitModal: document.querySelector("#unit-modal"),
-    unitClose: document.querySelector("#unit-close"), unitCardContent: document.querySelector("#unit-card-content"),
-    skipTurn: document.querySelector("#skip-turn"), pauseGame: document.querySelector("#pause-game")
+    unitClose: document.querySelector("#unit-close"), unitCardContent: document.querySelector("#unit-card-content")
   };
 
   let state;
@@ -197,16 +186,11 @@
     INITIAL_UNLOCKED.forEach(index => { unlocked[index] = true; });
     return {
       units: Array(BOARD_SIZE).fill(null), unlocked, pocket: Array(POCKET_SIZE).fill(null), enemies: [],
-      food: 25, baseHealth: 3, wave: 1, wavePending: enemyCountForWave(1), defeated: 0,
+      food: 30, baseHealth: 3, wave: 1, wavePending: enemyCountForWave(1), defeated: 0,
       refreshCount: 0, spawnClock: 0, intermission: 0,
-      generalCooldowns: {}, activeGeneralKeys: new Set(), skillActivationOrder: [],
-      lijingStealUsed: false, lijingUnlocked: false, paused: false,
+      generalCooldowns: {}, activeGeneralKeys: new Set(),
       running: false, over: false, won: false
     };
-  }
-
-  function isInteractive() {
-    return state?.running && !state?.over && !state?.paused;
   }
 
   function buildBoard() {
@@ -248,13 +232,12 @@
     buildBoard();
     state = freshState();
     selectedPocketIndex = null;
-    state.paused = false;
     state.running = true;
     state.spawnClock = 0.8;
     lastFrame = performance.now();
     closeUnitModal();
     dom.overlay.classList.add("hidden");
-    showStatus("先召喚文字；可直接拖到戰鬥格，或先點文字再點格子部署。");
+    showStatus("先刷新口袋；可直接拖到戰鬥格，或先點文字再點格子部署。");
     renderPocket();
     render();
     preloadCombatArt();
@@ -278,19 +261,11 @@
 
   function tick(now) {
     if (!state.running) return;
-    if (state.paused) {
-      lastFrame = now;
-      rafId = requestAnimationFrame(tick);
-      return;
-    }
     const delta = Math.min((now - lastFrame) / 1000, 0.1);
     lastFrame = now;
     state.spawnClock += delta;
-    const activeLi = activeGeneralFormations().find(formation => formation.id === "lijing");
-    const beginnerRates = [0, 0.05, 0.06, 0.08, 0.10, 0.12];
     Object.keys(state.generalCooldowns).forEach(key => {
-      const passiveRate = activeLi && key !== "lijing" ? beginnerRates[activeLi.level] : 0;
-      state.generalCooldowns[key] = Math.max(0, state.generalCooldowns[key] - delta * (1 + passiveRate));
+      state.generalCooldowns[key] = Math.max(0, state.generalCooldowns[key] - delta);
     });
     updateEnemies(delta);
     updateSpawning(delta);
@@ -300,7 +275,7 @@
   }
 
   function refreshPocket() {
-    if (!isInteractive()) return;
+    if (!state.running || state.over) return;
     if (state.food < REFRESH_COST) {
       showStatus("軍餉不足；請擊敗敵軍、守住整波，或復活後繼續挑戰。");
       return;
@@ -309,10 +284,7 @@
     selectedPocketIndex = null;
     state.refreshCount += 1;
     state.pocket = Array.from({ length: POCKET_SIZE }, () => {
-      const availableGeneralParts = state.lijingUnlocked
-        ? GENERAL_PARTS
-        : GENERAL_PARTS.filter(part => part.generalId !== "lijing");
-      const pool = Math.random() < 0.42 ? availableGeneralParts : UNIT_TYPES;
+      const pool = Math.random() < 0.42 ? GENERAL_PARTS : UNIT_TYPES;
       const template = pool[Math.floor(Math.random() * pool.length)];
       return { ...template, level: 1, cooldown: 0 };
     });
@@ -329,43 +301,14 @@
     renderPocket();
     render();
     showStatus(includeShovel
-      ? "召喚完成！出現鏟子，把它拖到鎖定格即可開地。"
+      ? "刷新完成！出現鏟子，把它拖到鎖定格即可開地。"
       : state.refreshCount === 1
-        ? "首次召喚出現兩組「趙、雲」；先組成趙雲，再把額外的趙或雲拖到武將的相同文字上增加經驗。"
-        : "召喚完成！武將字上下或左右相鄰，就能組成武將。");
-  }
-
-  function togglePause() {
-    if (!state?.running || state.over) return;
-    state.paused = !state.paused;
-    if (state.paused) {
-      showStatus("遊戲已暫停，按「繼續」可回到戰鬥。");
-    } else {
-      lastFrame = performance.now();
-      showStatus("遊戲繼續。");
-    }
-    render();
-  }
-
-  function skipWaiting() {
-    if (!isInteractive()) return;
-    if (state.wavePending > 0) {
-      state.wavePending = 0;
-      showStatus(`已跳過第 ${state.wave} 波剩餘生成。`);
-      render();
-      return;
-    }
-    if (state.intermission <= 0) {
-      showStatus("目前沒有可跳過的等待時間。");
-      return;
-    }
-    state.intermission = 0;
-    showStatus(`已跳過第 ${state.wave} 波等待時間。`);
-    render();
+        ? "首次刷新出現兩組「趙、雲」；先組成趙雲，再把額外的趙或雲拖到武將的相同文字上增加經驗。"
+        : "刷新完成！武將字上下或左右相鄰，就能組成武將。");
   }
 
   function inspectBoardSlot(index) {
-    if (!isInteractive()) return;
+    if (!state.running || state.over) return;
     if (selectedPocketIndex !== null && state.pocket[selectedPocketIndex]) {
       const pocketIndex = selectedPocketIndex;
       deployPocketItem(pocketIndex, index);
@@ -386,7 +329,7 @@
   }
 
   function tapBoardSlot(index) {
-    if (!isInteractive()) return;
+    if (!state.running || state.over) return;
     if (selectedPocketIndex !== null && state.pocket[selectedPocketIndex]) {
       lastBoardTap = null;
       inspectBoardSlot(index);
@@ -413,10 +356,9 @@
   }
 
   function inspectPocketItem(index) {
-    if (!isInteractive()) return;
     const item = state.pocket[index];
     if (!item) {
-      showStatus("這個口袋位置已經使用，下次召喚會補上新內容。");
+      showStatus("這個口袋位置已經使用，刷新後會補上新內容。");
       return;
     }
     if (item.kind === "shovel") {
@@ -446,15 +388,6 @@
     } else if (targetFormation) {
       if (sourceFormation?.key === targetFormation.key) {
         showStatus(`${targetFormation.name}是同一個整體；拖到空格才能拆開。`);
-        return;
-      }
-      if (canUseSameOrigin(source, targetFormation)) {
-        const sourcePoint = unitPosition(from);
-        state.units[from] = null;
-        const result = addGeneralExperience(targetFormation, 2);
-        animateLijingSameOrigin(sourcePoint, targetFormation);
-        showStatus(experienceGainMessage(targetFormation.name, result, `「${source.glyph}」化為無名墨後被吸收`));
-        render();
         return;
       }
       if (source.generalId === targetFormation.id && targetFormation.parts.includes(source.glyph)) {
@@ -518,15 +451,6 @@
       state.pocket[pocketIndex] = null;
       showStatus(`已把「${item.glyph}」部署到戰鬥場地。`);
     } else if (targetFormation) {
-      if (canUseSameOrigin(item, targetFormation)) {
-        state.pocket[pocketIndex] = null;
-        const result = addGeneralExperience(targetFormation, 2);
-        animateLijingSameOrigin(generalPosition(activeGeneralFormations().find(formation => formation.id === "lijing")), targetFormation);
-        showStatus(experienceGainMessage(targetFormation.name, result, `「${item.glyph}」化為無名墨後被吸收`));
-        renderPocket();
-        render();
-        return;
-      }
       if (item.generalId === targetFormation.id && targetFormation.parts.includes(item.glyph)) {
         if (targetFormation.level >= MAX_LEVEL) {
           showStatus(`${targetFormation.name}已經是最高 5 星。`);
@@ -563,19 +487,6 @@
   function canCombine(source, target) {
     return !source.generalId && !target.generalId
       && source.glyph === target.glyph && source.level === target.level && target.level < MAX_LEVEL;
-  }
-
-  function canUseSameOrigin(source, targetFormation) {
-    const li = activeGeneralFormations().find(formation => formation.id === "lijing");
-    return Boolean(li && li.level >= 3 && source?.generalId === "lijing"
-      && targetFormation.id !== "lijing" && ["李", "竟"].includes(source.glyph));
-  }
-
-  function animateLijingSameOrigin(from, targetFormation) {
-    const to = generalPosition(targetFormation);
-    createSkillOrigin(from, "lijing-origin");
-    createSkillTrail(from, to, "lijing-origin", 0, "main");
-    window.setTimeout(() => createImpactEffect(to, "lijing"), 320);
   }
 
   function upgradeSingleUnit(targetIndex) {
@@ -655,7 +566,7 @@
     if (!item) {
       selectedPocketIndex = null;
       renderPocket();
-      showStatus("這個口袋位置是空的，下次召喚會補上新內容。");
+      showStatus("這個口袋位置是空的，刷新後會補上新內容。");
       return;
     }
     if (item.kind === "shovel") {
@@ -687,7 +598,7 @@
   }
 
   function pointerDown(event, source, index) {
-    if (!isInteractive()) return;
+    if (!state.running || state.over) return;
     if (event.isPrimary === false) return;
     if (source === "pocket") lastBoardTap = null;
     const item = dragItem(source, index);
@@ -729,14 +640,11 @@
       const target = dropTargetAtPoint(event.clientX, event.clientY);
       cleanupPointerDrag();
       if (drag.source === "board") {
-        if (target?.area === "lijing-skill") useLijingSteal("board", drag.index);
-        else if (target?.area === "board" && target.index !== drag.index) {
+        if (target?.area === "board" && target.index !== drag.index) {
           if (!tryCombineGeneralFormations(drag.index, target.index)) moveOrCombine(drag.index, target.index);
         }
         else if (target?.area === "pocket") returnBoardUnitToPocket(drag.index, target.index);
         else showStatus("沒有放到其他格子，文字回到原位。");
-      } else if (target?.area === "lijing-skill") {
-        useLijingSteal("pocket", drag.index);
       } else if (target?.area === "pocket" && target.index !== drag.index) {
         combinePocketItems(drag.index, target.index);
       } else if (target?.area === "board") {
@@ -779,8 +687,6 @@
 
   function dropTargetAtPoint(x, y) {
     const element = document.elementFromPoint(x, y);
-    const liSkill = element?.closest?.(".general-skill.general-lijing.steal-ready");
-    if (liSkill) return { area: "lijing-skill", index: -1 };
     const boardSlot = element?.closest?.(".slot");
     if (boardSlot) return { area: "board", index: Number(boardSlot.dataset.index) };
     const pocketSlot = element?.closest?.(".pocket-item");
@@ -817,51 +723,9 @@
 
   function dropTargetElement(target) {
     if (!target) return null;
-    if (target.area === "lijing-skill") return dom.generals.querySelector(".general-skill.general-lijing");
     return target.area === "board"
       ? dom.board.querySelector(`.slot[data-index="${target.index}"]`)
       : dom.pocket.querySelector(`.pocket-item[data-index="${target.index}"]`);
-  }
-
-  function useLijingSteal(sourceArea, sourceIndex) {
-    const li = activeGeneralFormations().find(formation => formation.id === "lijing");
-    const item = dragItem(sourceArea, sourceIndex);
-    if (!li || (state.generalCooldowns.lijing ?? 0) <= 0 || state.lijingStealUsed) {
-      showStatus("偷天改字目前不能使用。");
-      return;
-    }
-    if (!item || item.kind !== "unit" || item.generalId || item.level < 2) {
-      showStatus("偷天改字只能選擇 2 星以上的基礎文字。");
-      return;
-    }
-    const originalGlyph = item.glyph;
-    let transformed;
-    if (Math.random() < 0.6) {
-      const choices = UNIT_TYPES.filter(type => type.glyph !== item.glyph);
-      transformed = { ...choices[Math.floor(Math.random() * choices.length)], level: item.level, cooldown: 0, alteredByLijing: true };
-    } else {
-      const unlockedParts = GENERAL_PARTS.filter(part => part.generalId !== "lijing");
-      transformed = { ...unlockedParts[Math.floor(Math.random() * unlockedParts.length)], level: 1, cooldown: 0,
-        wordEssence: [0, 0, 6, 12, 24, 45][item.level], alteredByLijing: true };
-    }
-    if (sourceArea === "board") state.units[sourceIndex] = transformed;
-    else state.pocket[sourceIndex] = transformed;
-    state.lijingStealUsed = true;
-    const from = sourceArea === "board" ? unitPosition(sourceIndex) : generalPosition(li);
-    animateLijingSteal(from, originalGlyph, transformed.glyph);
-    showStatus(`偷天改字：「${originalGlyph}」化為「${transformed.glyph}」。`);
-    renderPocket();
-    render();
-  }
-
-  function animateLijingSteal(from, originalGlyph, resultGlyph) {
-    const change = document.createElement("span");
-    change.className = "lijing-word-change";
-    change.style.left = `${from.x}%`;
-    change.style.top = `${from.y}%`;
-    change.innerHTML = `<i>${originalGlyph}</i><b>無</b><em>${resultGlyph}</em>`;
-    dom.attackFx.append(change);
-    removeSkillEffectLater(change, 1900);
   }
 
   function cleanupPointerDrag() {
@@ -884,9 +748,7 @@
 
   function updateSpawning(delta) {
     if (state.wavePending > 0) {
-      const spawnInterval = [1.8, 1.8, 1.8, 1.55, 1.55, 1.55, 1.35, 1.35, 1.35, 1.3][state.wave - 1];
-      const effectiveInterval = state.enemies.length ? spawnInterval : Math.min(spawnInterval, 0.5);
-      if (state.spawnClock >= effectiveInterval) {
+      if (state.spawnClock >= 2.1) {
         state.spawnClock = 0;
         spawnEnemy();
         state.wavePending -= 1;
@@ -900,8 +762,8 @@
     }
     if (state.intermission <= 0) {
       state.intermission = 2.5;
-      state.food += 3;
-      showStatus(`第 ${state.wave} 波守住了！獎勵 3 個軍餉。`);
+      state.food += 8;
+      showStatus(`第 ${state.wave} 波守住了！獎勵 8 個軍餉。`);
     } else {
       state.intermission -= delta;
       if (state.intermission <= 0) {
@@ -914,22 +776,22 @@
   }
 
   function spawnEnemy() {
-    const spawnNumber = enemyCountForWave(state.wave) - state.wavePending + 1;
-    const boss = state.wave === 10 && spawnNumber === 4;
-    const elite = !boss && (state.wave === 4 && spawnNumber === 6 || state.wave === 7 && [6, 12].includes(spawnNumber));
+    const boss = state.wave % 5 === 0 && state.wavePending === 1;
+    const middleSpawn = Math.ceil(enemyCountForWave(state.wave) / 2);
+    const elite = !boss && ENEMY_ELITES_AT.has(state.wave) && state.wavePending === middleSpawn;
     const rank = boss ? "boss" : elite ? "elite" : "normal";
     const enemyType = ENEMY_TYPES[selectedMapId] ?? ENEMY_TYPES.metal;
-    const waveHealth = ENEMY_BASE_HEALTH_BY_WAVE[state.wave - 1];
-    const healthMultiplier = boss ? 8 : elite ? 3 : 1;
-    const speedMultiplier = (boss ? 0.72 : elite ? 0.92 : 1) * ELEMENT_SPEED_MULTIPLIER[selectedMapId];
-    const maxHealth = Math.round(waveHealth * CHAPTER_HEALTH_MULTIPLIER[selectedMapId] * ELEMENT_HEALTH_MULTIPLIER[selectedMapId] * healthMultiplier);
+    const waveHealth = (26 + state.wave * 13) * (1.15 ** (state.wave - 1));
+    const healthMultiplier = boss ? 6 : elite ? 2.4 : 1;
+    const speedMultiplier = boss ? 0.72 : elite ? 0.88 : 1;
+    const maxHealth = Math.round(waveHealth * healthMultiplier);
     const enemy = {
       id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       name: boss ? enemyType.bossName : elite ? enemyType.eliteName : "蝕墨兵",
-      glyph: boss ? enemyType.bossGlyph : elite ? enemyType.eliteGlyph : enemyType.commonGlyph,
+      glyph: boss ? enemyType.bossGlyph : elite ? enemyType.eliteGlyph : "敵",
       element: selectedMapId, rank, health: maxHealth, maxHealth, progress: 0,
       speed: (0.0305 + state.wave * 0.0018) * speedMultiplier,
-      reward: boss ? 10 : elite ? 3 : 1,
+      reward: boss ? 35 : elite ? 16 + state.wave : 5 + Math.floor(state.wave / 2),
       boss, elite, hitUntil: 0
     };
     state.enemies.push(enemy);
@@ -939,7 +801,6 @@
   function updateEnemies(delta) {
     for (let i = state.enemies.length - 1; i >= 0; i -= 1) {
       const enemy = state.enemies[i];
-      if ((enemy.stunnedUntil ?? 0) > performance.now()) continue;
       enemy.progress += enemy.speed * delta;
       if (enemy.progress >= 1) {
         state.enemies.splice(i, 1);
@@ -993,11 +854,6 @@
     const newNames = formations
       .filter(formation => !state.activeGeneralKeys.has(formation.key))
       .map(formation => formation.name);
-    const activeIds = new Set(formations.map(formation => formation.id));
-    state.skillActivationOrder = (state.skillActivationOrder ?? []).filter(id => activeIds.has(id));
-    formations.forEach(formation => {
-      if (!state.skillActivationOrder.includes(formation.id)) state.skillActivationOrder.push(formation.id);
-    });
     state.activeGeneralKeys = nextKeys;
     if (newNames.length) showStatus(`武將組成：${newNames.join("、")}！被動效果已啟動，可以施放武將技。`);
   }
@@ -1054,8 +910,8 @@
 
   function generalCombatStats(formation, formations = activeGeneralFormations()) {
     const partStats = formation.indexes.map(index => combatStats(state.units[index], formations, index));
-    const effectByGeneral = { zhaoyun: "穿透", guanyu: "範圍", zhangfei: "控場", machao: "範圍", huangzhong: "單體", lijing: "輔助" };
-    const attackByGeneral = { zhaoyun: "spear", guanyu: "blade", zhangfei: "spear", machao: "cavalry", huangzhong: "bow", lijing: "ink" };
+    const effectByGeneral = { zhaoyun: "穿透", guanyu: "範圍", zhangfei: "範圍", machao: "範圍", huangzhong: "單體" };
+    const attackByGeneral = { zhaoyun: "spear", guanyu: "blade", zhangfei: "spear", machao: "cavalry", huangzhong: "bow" };
     return {
       damage: partStats.reduce((sum, stats) => sum + stats.damage, 0),
       attackSpeed: partStats.reduce((sum, stats) => sum + stats.attackSpeed, 0) / partStats.length,
@@ -1066,7 +922,7 @@
   }
 
   function useGeneralSkill(key) {
-    if (!isInteractive()) return;
+    if (!state.running || state.over) return;
     const formation = activeGeneralFormations().find(item => item.key === key);
     if (!formation) {
       showStatus("武將字陣已拆開，請重新把兩個字放在一起。");
@@ -1074,93 +930,53 @@
       return;
     }
     const cooldown = state.generalCooldowns[formation.id] ?? 0;
-    if (cooldown > 0) {
-      if (formation.id === "lijing" && !state.lijingStealUsed) {
-        showStatus("萬字歸名冷卻中：可將 2 星以上基礎文字拖到「竟」施放偷天改字。");
-      }
-      return;
-    }
-    if (!state.enemies.length && formation.id !== "lijing") {
+    if (cooldown > 0) return;
+    if (!state.enemies.length) {
       showStatus("目前沒有敵軍，先保留武將技。");
       return;
     }
-    const ordered = state.enemies.slice().sort((a, b) => b.progress - a.progress);
-    const baseDamage = generalCombatStats(formation).damage;
-    let visualTargets = [];
-    if (formation.id === "guanyu") {
-      visualTargets = ordered;
-      visualTargets.forEach(enemy => applyDamage(enemy, baseDamage * 2.6));
+    const starPower = formation.level * 2;
+    if (formation.id === "zhaoyun") {
+      state.enemies.slice().sort((a, b) => b.progress - a.progress).slice(0, 3)
+        .forEach(enemy => applyDamage(enemy, 36 + starPower * 12));
+    } else if (formation.id === "guanyu") {
+      state.enemies.forEach(enemy => applyDamage(enemy, 24 + starPower * 10));
     } else if (formation.id === "zhangfei") {
-      visualTargets = ordered;
-      visualTargets.forEach(enemy => {
-        applyDamage(enemy, baseDamage * 1.9);
-        enemy.stunnedUntil = performance.now() + (enemy.boss ? 500 : 1200);
-      });
-    } else if (formation.id === "zhaoyun") {
-      visualTargets = ordered.slice(0, 5);
-      visualTargets.forEach(enemy => applyDamage(enemy, baseDamage * 3.2));
+      state.enemies.forEach(enemy => applyDamage(enemy, 22 + starPower * 9));
     } else if (formation.id === "machao") {
-      visualTargets = ordered.slice(0, 6);
-      visualTargets.forEach(enemy => {
-        applyDamage(enemy, baseDamage * 2.3);
-        enemy.progress = Math.max(0, enemy.progress - 0.025);
-      });
-    } else if (formation.id === "huangzhong") {
-      const priority = ordered.find(enemy => enemy.boss)
-        ?? ordered.find(enemy => enemy.elite)
-        ?? ordered[0];
-      const secondaryTargets = priority?.boss || priority?.elite
-        ? Array(4).fill(priority)
-        : ordered.slice(1, 5);
-      visualTargets = priority ? [priority, ...secondaryTargets] : [];
-      if (priority) applyDamage(priority, baseDamage * 4.5);
-      secondaryTargets.forEach(enemy => applyDamage(enemy, baseDamage * 1.3));
-    } else if (formation.id === "lijing") {
-      state.enemies.forEach(enemy => { enemy.removableStatus = null; });
-      visualTargets = [];
-      state.lijingStealUsed = false;
+      state.enemies.slice().sort((a, b) => b.progress - a.progress).slice(0, 5)
+        .forEach(enemy => applyDamage(enemy, 30 + starPower * 10));
+    } else {
+      state.enemies.forEach(enemy => applyDamage(enemy, 28 + starPower * 9));
     }
-    const starCooldownMultiplier = [1, 1, 0.96, 0.92, 0.88, 0.84][formation.level] ?? 1;
-    state.generalCooldowns[formation.id] = formation.cooldown * starCooldownMultiplier;
-    animateGeneralSkill(formation, visualTargets);
+    state.generalCooldowns[formation.id] = formation.cooldown;
+    animateGeneralSkill(formation);
     const defeated = collectDefeatedEnemies(formation);
     showStatus(`${formation.name}施放「${formation.skill}」！${defeated.message ? ` ${defeated.message}` : ""}`);
     render();
   }
 
-  function animateGeneralSkill(formation, targets = []) {
-    const from = generalPosition(formation);
-    createSkillOrigin(from, formation.id);
-    if (formation.id === "lijing") {
-      animateLijingRipple(from);
-    } else if (formation.id === "zhangfei") {
-      createEarthRipples(from);
-      targets.forEach((enemy, index) => {
-        const to = routePoint(enemy.progress);
-        createSkillTrail(from, to, formation.id, index * 45);
-        window.setTimeout(() => createImpactEffect(to, formation.id), 240 + index * 45);
-      });
-    } else if (formation.id === "huangzhong") {
-      createHuangVolley(from, targets.map(enemy => routePoint(enemy.progress)));
-      targets.forEach((enemy, index) => {
-        window.setTimeout(() => createImpactEffect(routePoint(enemy.progress), formation.id), 300 + index * 55);
-      });
-    } else {
-      targets.forEach((enemy, index) => {
-        const to = routePoint(enemy.progress);
-        createSkillTrail(from, to, formation.id, index * 55, index === 0 ? "main" : "secondary");
-        window.setTimeout(() => createImpactEffect(to, formation.id), 290 + index * 55);
-      });
-      const farthest = targets[0];
-      if (["guanyu", "zhaoyun", "machao"].includes(formation.id) && farthest) {
-        createSkillSpirit(from, routePoint(farthest.progress), formation.id);
-      }
-    }
+  function animateGeneralSkill(formation) {
+    const effect = document.createElement("div");
+    effect.className = `general-skill-fx ${formation.id}`;
+    const blueDragonSegments = Array.from({ length: 7 }, (_, index) =>
+      `<span class="dragon-segment segment-${index + 1}"><img src="${GENERAL_SKILL_ART.zhaoyun}" alt=""></span>`
+    ).join("");
+    const visuals = {
+      guanyu: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.guanyu}" alt=""></div>`,
+      zhaoyun: `<div class="skill-visual"><div class="dragon-swim">${blueDragonSegments}</div></div>`,
+      zhangfei: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.zhangfei}" alt=""></div>`,
+      machao: `<div class="skill-visual"><img class="skill-art" src="${GENERAL_SKILL_ART.machao}" alt=""></div>`,
+      huangzhong: `<div class="skill-visual arrow-volley"><img class="skill-arrow main" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary one" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary two" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary three" src="${GENERAL_SKILL_ART.huangzhong}" alt=""><img class="skill-arrow secondary four" src="${GENERAL_SKILL_ART.huangzhong}" alt=""></div>`
+    };
+    effect.innerHTML = `<div class="skill-caption"><b>${formation.name}</b><span>${formation.skill}</span></div>${visuals[formation.id] ?? ""}`;
+    dom.attackFx.append(effect);
     dom.battlefield.classList.add("skill-casting", `skill-${formation.id}`);
     attackingGeneralKeys.add(formation.key);
     renderBoard(activeGeneralFormations());
     renderGeneralFrames(activeGeneralFormations());
-    if (!document.body.classList.contains("skill-preview-capture")) window.setTimeout(() => {
+    window.setTimeout(() => effect.remove(), 1700);
+    window.setTimeout(() => {
       dom.battlefield.classList.remove("skill-casting", `skill-${formation.id}`);
       attackingGeneralKeys.delete(formation.key);
       if (state) {
@@ -1169,115 +985,6 @@
         renderGeneralFrames(formations);
       }
     }, 1500);
-  }
-
-  function battlefieldPixelPoint(point) {
-    const rect = dom.battlefield.getBoundingClientRect();
-    return { x: rect.width * point.x / 100, y: rect.height * point.y / 100 };
-  }
-
-  function createSkillOrigin(point, generalId) {
-    const origin = document.createElement("span");
-    origin.className = `skill-origin ${generalId}`;
-    origin.style.left = `${point.x}%`;
-    origin.style.top = `${point.y}%`;
-    dom.attackFx.append(origin);
-    removeSkillEffectLater(origin, 1700);
-  }
-
-  function createSkillTrail(from, to, generalId, delay = 0, weight = "secondary") {
-    const start = battlefieldPixelPoint(from);
-    const end = battlefieldPixelPoint(to);
-    const dx = end.x - start.x;
-    const dy = end.y - start.y;
-    const trail = document.createElement("span");
-    trail.className = `skill-trail ${generalId} ${weight}`;
-    trail.style.left = `${start.x}px`;
-    trail.style.top = `${start.y}px`;
-    trail.style.width = `${Math.hypot(dx, dy)}px`;
-    trail.style.setProperty("--trail-angle", `${Math.atan2(dy, dx) * 180 / Math.PI}deg`);
-    trail.style.setProperty("--trail-delay", `${delay}ms`);
-    dom.attackFx.append(trail);
-    removeSkillEffectLater(trail, 1750 + delay);
-  }
-
-  function createSkillSpirit(from, to, generalId) {
-    const start = battlefieldPixelPoint(from);
-    const end = battlefieldPixelPoint(to);
-    const spirit = document.createElement("img");
-    spirit.className = `skill-spirit ${generalId}`;
-    spirit.src = GENERAL_SKILL_ART[generalId];
-    spirit.alt = "";
-    spirit.style.left = `${start.x}px`;
-    spirit.style.top = `${start.y}px`;
-    spirit.style.setProperty("--spirit-x", `${end.x - start.x}px`);
-    spirit.style.setProperty("--spirit-y", `${end.y - start.y}px`);
-    spirit.style.setProperty("--spirit-angle", `${Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI}deg`);
-    dom.attackFx.append(spirit);
-    removeSkillEffectLater(spirit, 1700);
-  }
-
-  function createHuangVolley(from, targetPoints) {
-    const rect = dom.battlefield.getBoundingClientRect();
-    const start = battlefieldPixelPoint(from);
-    const offsets = [-52, -25, 0, 25, 52];
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.classList.add("huang-volley-path");
-    svg.setAttribute("viewBox", `0 0 ${rect.width} ${rect.height}`);
-    svg.setAttribute("aria-hidden", "true");
-    targetPoints.forEach((point, index) => {
-      const end = battlefieldPixelPoint(point);
-      const dx = end.x - start.x;
-      const dy = end.y - start.y;
-      const length = Math.max(1, Math.hypot(dx, dy));
-      const normalX = -dy / length;
-      const normalY = dx / length;
-      const offset = offsets[index] ?? 0;
-      const controlX = (start.x + end.x) / 2 + normalX * offset;
-      const controlY = (start.y + end.y) / 2 + normalY * offset;
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`);
-      path.classList.add(index === 0 ? "main" : "secondary");
-      path.style.setProperty("--arrow-delay", `${index * 70}ms`);
-      svg.append(path);
-    });
-    dom.attackFx.append(svg);
-    removeSkillEffectLater(svg, 1900);
-  }
-
-  function createEarthRipples(from) {
-    for (let index = 0; index < 3; index += 1) {
-      const ripple = document.createElement("span");
-      ripple.className = `skill-ripple zhangfei ring-${index + 1}`;
-      ripple.style.left = `${from.x}%`;
-      ripple.style.top = `${from.y}%`;
-      ripple.style.setProperty("--ripple-delay", `${index * 150}ms`);
-      dom.attackFx.append(ripple);
-      removeSkillEffectLater(ripple, 1800);
-    }
-  }
-
-  function animateLijingRipple(from) {
-    dom.battlefield.classList.add("lijing-cleansing");
-    for (let index = 0; index < 5; index += 1) {
-      const ripple = document.createElement("span");
-      ripple.className = `skill-ripple lijing ring-${index + 1}`;
-      ripple.style.left = `${from.x}%`;
-      ripple.style.top = `${from.y}%`;
-      ripple.style.setProperty("--ripple-delay", `${index * 120}ms`);
-      dom.attackFx.append(ripple);
-      removeSkillEffectLater(ripple, 1950);
-    }
-    [...dom.board.querySelectorAll(".slot")].forEach((slot, index) => {
-      if (!state.unlocked[index]) return;
-      window.setTimeout(() => slot.classList.add("lijing-cleansed"), 320 + index * 22);
-      if (!document.body.classList.contains("skill-preview-capture")) window.setTimeout(() => slot.classList.remove("lijing-cleansed"), 1500);
-    });
-    if (!document.body.classList.contains("skill-preview-capture")) window.setTimeout(() => dom.battlefield.classList.remove("lijing-cleansing"), 1700);
-  }
-
-  function removeSkillEffectLater(element, delay) {
-    if (!document.body.classList.contains("skill-preview-capture")) window.setTimeout(() => element.remove(), delay);
   }
 
   function updateUnitAttacks(delta) {
@@ -1296,10 +1003,10 @@
       const stats = combatStats(unit, formations);
       const damage = stats.damage;
       animateUnitAttack(unitIndex, unit, eligible[0].enemy);
-      applyDamage(eligible[0].enemy, damage, unitAttackKind(unit));
-      if (unit.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, damage * 0.45, unitAttackKind(unit));
+      applyDamage(eligible[0].enemy, damage);
+      if (unit.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, damage * 0.45);
       if (unit.effect === "範圍") {
-        for (const nearby of eligible.slice(1, 3)) applyDamage(nearby.enemy, damage * 0.5, unitAttackKind(unit));
+        for (const nearby of eligible.slice(1, 3)) applyDamage(nearby.enemy, damage * 0.5);
       }
       unit.cooldown = 1 / stats.attackSpeed;
       collectDefeatedEnemies();
@@ -1317,10 +1024,10 @@
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       animateGeneralAttack(formation, eligible[0].enemy, stats.attackKind);
-      applyDamage(eligible[0].enemy, stats.damage, stats.attackKind);
-      if (stats.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, stats.damage * 0.45, stats.attackKind);
+      applyDamage(eligible[0].enemy, stats.damage);
+      if (stats.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, stats.damage * 0.45);
       if (stats.effect === "範圍") {
-        for (const nearby of eligible.slice(1, 4)) applyDamage(nearby.enemy, stats.damage * 0.5, stats.attackKind);
+        for (const nearby of eligible.slice(1, 4)) applyDamage(nearby.enemy, stats.damage * 0.5);
       }
       const nextCooldown = 1 / stats.attackSpeed;
       parts.forEach(unit => { unit.cooldown = nextCooldown; });
@@ -1328,11 +1035,9 @@
     });
   }
 
-  function applyDamage(enemy, amount, hitKind = "ink") {
+  function applyDamage(enemy, amount) {
     enemy.health -= amount;
-    enemy.hitKind = hitKind;
-    enemy.lastDamage = Math.max(1, Math.round(amount));
-    enemy.hitUntil = performance.now() + 320;
+    enemy.hitUntil = performance.now() + 150;
   }
 
   function collectDefeatedEnemies(killerFormation = null) {
@@ -1381,7 +1086,7 @@
     dom.dialogList.hidden = true;
     dom.dialogDetail.textContent = won
       ? `你撐過 10 波，擊敗 ${state.defeated} 名敵軍。`
-      : `你守到第 ${state.wave} 波，擊敗 ${state.defeated} 名敵軍。再試著保留軍餉召喚與開地。`;
+      : `你守到第 ${state.wave} 波，擊敗 ${state.defeated} 名敵軍。再試著保留軍餉刷新與開地。`;
     dom.start.textContent = "再玩一次";
     dom.overlay.classList.remove("hidden");
     render();
@@ -1395,14 +1100,7 @@
     dom.base.textContent = "❤".repeat(Math.max(state.baseHealth, 0)) || "0";
     dom.enemyCount.textContent = state.enemies.length + state.wavePending;
     dom.attack.textContent = totalAttack().toFixed(1);
-    dom.refresh.disabled = !isInteractive() || state.food < REFRESH_COST;
-    if (dom.skipTurn) {
-      dom.skipTurn.disabled = !state.running || state.over || !state.intermission && state.wavePending <= 0;
-    }
-    if (dom.pauseGame) {
-      dom.pauseGame.disabled = !state.running || state.over;
-      dom.pauseGame.textContent = state.paused ? "繼續" : "暫停";
-    }
+    dom.refresh.disabled = !state.running || state.food < REFRESH_COST;
     renderBoard(formations);
     renderGeneralFrames(formations);
     renderEnemies();
@@ -1471,7 +1169,7 @@
       const rowSpan = formation.orientation === "vertical" ? 2 : 1;
       return `<div class="general-frame ${formation.orientation} general-${formation.id}${attackingGeneralKeys.has(formation.key) ? " attacking" : ""}"
         style="grid-column:${column} / span ${columnSpan};grid-row:${row} / span ${rowSpan}">
-        <span class="general-frame-info"><b>${"★".repeat(formation.level)}</b><strong>${formation.name}</strong><i><u style="width:${generalXpPercent(formation)}%"></u></i></span>
+        <span class="general-frame-info"><strong>${formation.name}</strong><i><u style="width:${generalXpPercent(formation)}%"></u></i><b>${"★".repeat(formation.level)}</b></span>
       </div>`;
     }).join("");
     dom.generalFrames.dataset.signature = signature;
@@ -1479,34 +1177,22 @@
 
   function renderGenerals(formations) {
     const byId = new Map(formations.map(formation => [formation.id, formation]));
-    const liActive = byId.has("lijing");
-    const capacity = state.lijingUnlocked ? 6 : 5;
-    const orderedIds = [...(state.skillActivationOrder ?? [])].filter(id => byId.has(id));
-    formations.forEach(formation => {
-      if (!orderedIds.includes(formation.id)) orderedIds.push(formation.id);
-    });
-    const visibleGenerals = orderedIds.map(id => GENERAL_TYPES.find(general => general.id === id)).filter(Boolean);
-    dom.generals.classList.toggle("has-lijing", state.lijingUnlocked);
-    const signature = `${capacity}|` + visibleGenerals.map(general => {
+    const signature = GENERAL_TYPES.map(general => {
       const formation = byId.get(general.id);
-      return `${formation.key}-${formation.level}`;
+      return formation ? `${formation.key}-${formation.level}` : `${general.id}-sleep`;
     }).join("|");
     if (dom.generals.dataset.signature !== signature) {
-      const activeButtons = visibleGenerals.map(general => {
+      dom.generals.innerHTML = GENERAL_TYPES.map(general => {
         const formation = byId.get(general.id);
-        return `<button class="general-skill general-${general.id} awake${liActive && general.id !== "lijing" ? " beginner-blessed" : ""}" type="button"
-          data-general-id="${general.id}" data-general-key="${formation.key}"
-          aria-label="${general.name}，${general.skill}">
-          <span class="skill-glyph">${general.skillGlyph}</span><small>${general.skill}</small>
+        return `<button class="general-skill general-${general.id}${formation ? " awake" : " sleeping"}" type="button"
+          data-general-id="${general.id}"${formation ? ` data-general-key="${formation.key}"` : ""}
+          aria-label="${formation ? `${general.name}，${general.skill}` : `${general.name}尚未合體`}">
+          <span class="skill-glyph">${general.parts[0]}</span><small>${general.name}</small>
         </button>`;
       }).join("");
-      const emptyButtons = Array.from({ length: Math.max(0, capacity - visibleGenerals.length) }, () =>
-        `<button class="general-skill empty" type="button" disabled aria-label="未使用技能槽"></button>`
-      ).join("");
-      dom.generals.innerHTML = activeButtons + emptyButtons;
       dom.generals.dataset.signature = signature;
     }
-    visibleGenerals.forEach(general => {
+    GENERAL_TYPES.forEach(general => {
       const formation = byId.get(general.id);
       const button = dom.generals.querySelector(`[data-general-id="${general.id}"]`);
       if (!button) return;
@@ -1514,11 +1200,9 @@
       const ready = cooldown <= 0;
       const progress = ready ? 100 : Math.max(0, (1 - cooldown / general.cooldown) * 100);
       button.style.setProperty("--skill-progress", `${progress}%`);
-      const stealReady = general.id === "lijing" && formation && !ready && !state.lijingStealUsed;
-      button.classList.toggle("steal-ready", Boolean(stealReady));
-      button.disabled = !formation || (!ready && !stealReady) || (general.id !== "lijing" && !state.enemies.length);
-      button.querySelector(".skill-glyph").textContent = general.skillGlyph;
-      button.querySelector("small").textContent = stealReady ? "偷天改字" : general.skill;
+      button.disabled = !formation || !ready || !state.enemies.length;
+      button.querySelector(".skill-glyph").textContent = formation && !ready ? String(Math.ceil(cooldown)) : general.parts[0];
+      button.querySelector("small").textContent = formation ? general.skill : `${general.name}・沉睡`;
     });
   }
 
@@ -1530,10 +1214,10 @@
       const selected = selectedPocketIndex === index;
       if (!item) {
         slot.className = `pocket-item used${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
-        setRenderedSlot(slot, "pocket-empty", `<span class="glyph">·</span><span class="label">等待召喚</span>`, `口袋 ${index + 1}，空`);
+        setRenderedSlot(slot, "pocket-empty", `<span class="glyph">·</span><span class="label">等待刷新</span>`, `口袋 ${index + 1}，空`);
       } else if (item.kind === "shovel") {
         slot.className = `pocket-item shovel${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
-        setRenderedSlot(slot, "pocket-shovel", `<img class="shovel-icon" src="assets/items/golden-shovel.png" alt=""><span class="label">拖到鎖定格</span>`, `口袋 ${index + 1}，金色鏟子，拖到鎖定格開地`);
+        setRenderedSlot(slot, "pocket-shovel", `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`, `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
       } else {
         slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}${selected ? " selected" : ""}`;
         setRenderedSlot(slot, `pocket-${item.glyph}-${item.level}`, `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`, `口袋 ${index + 1}，${item.name}，${item.level} 星，${selected ? "已選取，" : ""}可點擊或拖曳合體`);
@@ -1547,13 +1231,10 @@
       const hp = Math.max(0, Math.min(100, enemy.health / enemy.maxHealth * 100));
       const point = routePoint(enemy.progress);
       const y = Math.max(8, Math.min(92, point.y + (index % 3 - 1) * 2.5));
-      const isHit = enemy.hitUntil > performance.now();
-      const hit = isHit ? ` hit hit-${enemy.hitKind ?? "ink"}` : "";
-      const stunned = (enemy.stunnedUntil ?? 0) > performance.now() ? " stunned" : "";
-      const removable = enemy.removableStatus ? `<em class="enemy-status">${enemy.removableStatus}</em>` : "";
+      const hit = enemy.hitUntil > performance.now() ? " hit" : "";
       const art = enemyArtSource(enemy);
-      return `<div class="enemy-token ${enemy.rank} element-${enemy.element}${hit}${stunned}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
-        <span class="enemy-aura"></span>${art ? `<img class="enemy-art" src="${art}" alt="">` : ""}${removable}<strong>${enemy.glyph}</strong>${isHit ? `<span class="enemy-hit-mark"><i></i><b></b><em></em><u>-${enemy.lastDamage ?? 0}</u></span>` : ""}<span class="token-health"><i style="width:${hp}%"></i></span>
+      return `<div class="enemy-token ${enemy.rank} element-${enemy.element}${hit}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
+        <span class="enemy-aura"></span>${art ? `<img class="enemy-art" src="${art}" alt="">` : ""}<strong>${enemy.glyph}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
         <small>${enemy.rank === "boss" ? "首領" : enemy.rank === "elite" ? "菁英" : Math.ceil(enemy.health)}</small></div>`;
     }).join("");
   }
@@ -1675,7 +1356,7 @@
     impact.style.top = `${to.y}%`;
     impact.innerHTML = "<i>丶</i><b>丿</b><em>㇏</em>";
     dom.attackFx.append(impact);
-    removeSkillEffectLater(impact, 480);
+    window.setTimeout(() => impact.remove(), 480);
   }
 
   function animateEnemyArrival(enemy) {
@@ -1762,89 +1443,7 @@
   }
 
   function showStatus(message) { dom.status.textContent = message; }
-  function enemyCountForWave(wave) { return ENEMY_COUNTS_BY_WAVE[wave - 1] ?? 0; }
-
-  function previewUnit(glyph, level = 5) {
-    const template = GENERAL_PARTS.find(part => part.glyph === glyph)
-      ?? UNIT_TYPES.find(part => part.glyph === glyph);
-    return template ? { ...template, level, cooldown: 0, generalXp: 0 } : null;
-  }
-
-  function placePreviewGeneral(generalId, indexes, level = 5) {
-    const general = GENERAL_TYPES.find(item => item.id === generalId);
-    if (!general) return;
-    const readingOrder = indexes.slice().sort((a, b) => {
-      const [aColumn, aRow] = SLOT_LAYOUT[a];
-      const [bColumn, bRow] = SLOT_LAYOUT[b];
-      return aRow - bRow || aColumn - bColumn;
-    });
-    readingOrder.forEach((index, partIndex) => {
-      state.unlocked[index] = true;
-      state.units[index] = previewUnit(general.parts[partIndex], level);
-    });
-  }
-
-  function previewEnemy(progress, rank = "normal", element = selectedMapId) {
-    const enemyType = ENEMY_TYPES[element];
-    return {
-      id: `preview-${rank}-${progress}`,
-      name: rank === "boss" ? enemyType.bossName : rank === "elite" ? enemyType.eliteName : "蝕墨兵",
-      glyph: rank === "boss" ? enemyType.bossGlyph : rank === "elite" ? enemyType.eliteGlyph : enemyType.commonGlyph,
-      element, rank, health: 99999, maxHealth: 99999, progress, speed: 0,
-      reward: 0, boss: rank === "boss", elite: rank === "elite", hitUntil: 0,
-      removableStatus: rank === "normal" ? "疾" : null
-    };
-  }
-
-  function setupSkillPreview(previewId) {
-    document.body.classList.add("skill-preview-capture");
-    selectedMapId = previewId.startsWith("lijing") ? "earth" : "metal";
-    applySelectedMap();
-    buildBoard();
-    buildPocket();
-    state = freshState();
-    state.running = true;
-    state.lijingUnlocked = true;
-    state.wave = previewId === "huangzhong" ? 10 : 7;
-    state.wavePending = 0;
-    state.food = 86;
-    state.unlocked = Array(BOARD_SIZE).fill(false).map((_, index) => index < 14);
-    const mainId = previewId.split("-").slice(0, 1)[0];
-    placePreviewGeneral(mainId, [0, 1], previewId === "lijing-origin" ? 3 : 5);
-    if (previewId.startsWith("lijing")) {
-      placePreviewGeneral("guanyu", [2, 3], 4);
-      placePreviewGeneral("zhaoyun", [4, 5], 3);
-    } else {
-      state.units[2] = previewUnit("刀", 3);
-      state.units[3] = previewUnit("弓", 3);
-      state.units[4] = previewUnit("槍", 2);
-      state.units[5] = previewUnit("騎", 2);
-    }
-    state.enemies = [
-      previewEnemy(0.18), previewEnemy(0.27), previewEnemy(0.36), previewEnemy(0.45),
-      previewEnemy(0.54), previewEnemy(0.63), previewEnemy(0.71, "elite"),
-      previewEnemy(0.79, previewId === "huangzhong" ? "boss" : "normal")
-    ];
-    if (previewId === "lijing-steal") {
-      state.units[6] = previewUnit("刀", 3);
-      state.generalCooldowns.lijing = 28;
-    }
-    if (previewId === "lijing-origin") state.units[6] = previewUnit("李", 1);
-    dom.overlay.classList.add("hidden");
-    dom.battlefield.dataset.preview = previewId;
-    renderPocket();
-    render();
-    const formation = activeGeneralFormations().find(item => item.id === mainId);
-    if (previewId === "lijing-passive") {
-      showStatus("守字初心生效：其他已覺醒武將的技能冷卻加快。");
-      return;
-    }
-    window.setTimeout(() => {
-      if (previewId === "lijing-steal") useLijingSteal("board", 6);
-      else if (previewId === "lijing-origin") moveOrCombine(6, 2);
-      else if (formation) useGeneralSkill(formation.key);
-    }, 420);
-  }
+  function enemyCountForWave(wave) { return 4 + wave; }
 
   applySelectedMap();
   buildBoard();
@@ -1853,8 +1452,6 @@
   renderPocket();
   render();
   dom.refresh.addEventListener("click", refreshPocket);
-  dom.skipTurn?.addEventListener("click", skipWaiting);
-  dom.pauseGame?.addEventListener("click", togglePause);
   dom.generals.addEventListener("click", event => {
     const button = event.target.closest("[data-general-key]");
     if (button) useGeneralSkill(button.dataset.generalKey);
@@ -1885,8 +1482,4 @@
     dom.start.textContent = "開始守城";
     startGame();
   });
-  const requestedPreview = new URLSearchParams(window.location.search).get("skillPreview");
-  if (requestedPreview && ["guanyu", "zhangfei", "zhaoyun", "machao", "huangzhong", "lijing", "lijing-steal", "lijing-origin", "lijing-passive"].includes(requestedPreview)) {
-    setupSkillPreview(requestedPreview);
-  }
 })();
