@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#14251b">
+  <title>字陣守城｜戰場配置器</title>
+  <link rel="stylesheet" href="layout-editor.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <header>
+      <p>字陣守城</p>
+      <h1>12 × 11 戰場配置器</h1>
+      <div id="counts" aria-live="polite">道路 0｜文字格 0</div>
+    </header>
+
+    <nav class="tools" aria-label="配置工具">
+      <button type="button" data-tool="route" aria-pressed="true"><b>路</b><span>道路</span></button>
+      <button type="button" data-tool="slot" aria-pressed="false"><b>格</b><span>文字格</span></button>
+      <button type="button" data-tool="entry" aria-pressed="false"><b>入</b><span>入口</span></button>
+      <button type="button" data-tool="goal" aria-pressed="false"><b>終</b><span>終點</span></button>
+      <button type="button" data-tool="erase" aria-pressed="false"><b>×</b><span>清除</span></button>
+    </nav>
+
+    <section class="board-wrap" aria-label="戰場配置區">
+      <div class="column-labels" aria-hidden="true"></div>
+      <div class="row-labels" aria-hidden="true"></div>
+      <div id="board" class="board" role="grid" aria-label="12欄11列戰場"></div>
+    </section>
+
+    <p class="hint">先選工具再點格子。道路請依敵軍行走順序逐格點選，格內數字是行走順序。</p>
+
+    <div class="actions">
+      <button type="button" id="undo">復原</button>
+      <button type="button" id="reset">全部清除</button>
+      <button type="button" id="copy" class="primary">複製配置給 Codex</button>
+    </div>
+
+    <details>
+      <summary>查看配置資料</summary>
+      <textarea id="output" readonly spellcheck="false" aria-label="配置JSON"></textarea>
+    </details>
+    <p id="message" class="message" aria-live="polite"></p>
+  </main>
+  <script src="layout-editor.js"></script>
+</body>
+</html>
