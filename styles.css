@@ -201,8 +201,34 @@ button { font: inherit; }
 .enemy-token.element-water .enemy-aura { border-style: dashed; animation-name: water-flow; }
 .enemy-token.element-fire .enemy-aura { border-width: 3px 1px 4px 2px; animation-name: fire-flicker; }
 .enemy-token.element-earth .enemy-aura { border-radius: 8px; transform: rotate(45deg); }
-.enemy-token.hit { animation: enemy-hit .16s ease-out; filter: brightness(1.8); }
-@keyframes enemy-hit { 0% { transform: translate(-50%, -50%) scale(1); } 45% { transform: translate(-50%, -50%) scale(.82) rotate(-5deg); } 100% { transform: translate(-50%, -50%) scale(1); } }
+.enemy-token.hit { animation: enemy-hit .32s ease-out; filter: brightness(1.55); }
+@keyframes enemy-hit {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  22% { transform: translate(calc(-50% - 3px), -50%) scale(.88) rotate(-6deg); }
+  45% { transform: translate(calc(-50% + 3px), -50%) scale(.94) rotate(5deg); }
+  72% { transform: translate(calc(-50% - 1px), -50%) rotate(-2deg); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+.enemy-hit-mark { position:absolute; inset:-10px; z-index:8; pointer-events:none; }
+.enemy-hit-mark i, .enemy-hit-mark b, .enemy-hit-mark em {
+  position:absolute; display:block; width:7px; height:13px; border-radius:60% 10% 65% 15%;
+  background:#62b969; box-shadow:0 0 5px rgba(85,208,101,.85); animation:enemy-hit-shard .32s ease-out forwards;
+}
+.enemy-hit-mark i { left:4px; top:14px; transform:rotate(-38deg); }
+.enemy-hit-mark b { right:5px; top:7px; transform:rotate(42deg) scale(.75); }
+.enemy-hit-mark em { right:9px; bottom:3px; transform:rotate(78deg) scale(.55); }
+.enemy-hit-mark u {
+  position:absolute; left:50%; top:-12px; transform:translateX(-50%); color:#fff2bc;
+  font:700 10px/1 sans-serif; text-decoration:none; text-shadow:0 1px 3px #000,0 0 5px #d34b37;
+  animation:enemy-damage-number .4s ease-out forwards;
+}
+.hit-bow .enemy-hit-mark i,.hit-bow .enemy-hit-mark b,.hit-bow .enemy-hit-mark em { background:#efb547; box-shadow:0 0 5px #ffca62; }
+.hit-spear .enemy-hit-mark i,.hit-spear .enemy-hit-mark b,.hit-spear .enemy-hit-mark em { width:3px; height:15px; background:#84d9ed; box-shadow:0 0 6px #5dcced; }
+.hit-blade .enemy-hit-mark i,.hit-blade .enemy-hit-mark b,.hit-blade .enemy-hit-mark em { width:3px; height:19px; background:#e8f4ee; box-shadow:0 0 6px #b8e7d6; }
+.hit-cavalry .enemy-hit-mark i,.hit-cavalry .enemy-hit-mark b,.hit-cavalry .enemy-hit-mark em { background:#d5a951; box-shadow:0 0 6px #f0c96b; }
+.hit-ink .enemy-hit-mark i,.hit-ink .enemy-hit-mark b,.hit-ink .enemy-hit-mark em { border-radius:50%; background:#d2ac56; box-shadow:0 0 6px #e4bf65; }
+@keyframes enemy-hit-shard { to { translate:var(--hit-x, 5px) var(--hit-y, -8px); opacity:0; scale:.35; } }
+@keyframes enemy-damage-number { to { transform:translate(-50%,-12px); opacity:0; } }
 @keyframes enemy-aura-pulse { 0%,100% { opacity: .55; transform: scale(.88); } 50% { opacity: 1; transform: scale(1.08); } }
 @keyframes boss-domain { to { transform: rotate(360deg); } }
 @keyframes water-flow { to { transform: rotate(360deg); } }
@@ -884,6 +910,7 @@ button { font: inherit; }
 .pocket-item .glyph { display: block; font-size: clamp(23px, 7vw, 34px); font-weight: 800; line-height: 1.15; }
 .pocket-item .label { display: block; overflow: hidden; color: #785c2f; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
 .pocket-item.shovel { border-color: #6ab8cf; background: #d5edf0; color: #234b59; }
+.pocket-item.shovel .shovel-icon { width:32px; height:38px; object-fit:contain; filter:drop-shadow(0 2px 2px rgba(63,38,5,.45)); }
 .pocket-item.used { border-color: #30424d; background: #17242d; color: #526875; }
 .pocket-item.drag-source { opacity: .35; }
 .pocket-item.drop-target { outline: 4px solid #69cde3; outline-offset: -3px; transform: translateY(-3px); }
