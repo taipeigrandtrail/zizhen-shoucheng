@@ -10,12 +10,14 @@
   <title>字陣守城｜公開測試版</title>
   <link rel="stylesheet" href="styles.css?v=30">
 </head>
-<body>
+  <body>
   <main class="game-shell" aria-label="字陣守城遊戲">
+    <p id="left-text-block" class="layout-text-box">文字</p>
     <header class="game-header">
-      <p class="eyebrow">守字人・<span id="map-name">鑄鐵關</span></p>
+      <p class="eyebrow">關卡資訊欄・<span id="map-name">鑄鐵關</span></p>
       <h1>字陣守城</h1>
     </header>
+    <button id="pause-game" class="layout-button" type="button">遊戲暫停</button>
 
     <section class="stats" aria-label="遊戲狀態">
       <div><span>軍餉</span><strong id="food">30</strong></div>
@@ -26,7 +28,7 @@
 
     <section class="battle-section" aria-labelledby="battle-title">
       <div class="section-heading">
-        <h2 id="battle-title">字陣戰場</h2>
+        <h2 id="battle-title">戰鬥場</h2>
         <span>敵軍貼著字陣邊緣進攻</span>
       </div>
       <div class="battlefield">
@@ -47,7 +49,7 @@
 
     <section class="general-section" aria-labelledby="general-title">
       <div class="section-heading">
-        <h2 id="general-title">武將技能</h2>
+        <h2 id="general-title">武將技能欄</h2>
         <span>固定五格・冷卻環不位移</span>
       </div>
       <div id="generals" class="generals" aria-live="polite">
@@ -57,13 +59,15 @@
 
     <section class="pocket-section" aria-labelledby="pocket-title">
       <div class="section-heading">
-        <h2 id="pocket-title">口袋</h2>
+        <h2 id="pocket-title">口袋欄</h2>
         <span>戰鬥棋子可拖回口袋空格</span>
       </div>
       <div id="pocket" class="pocket" aria-label="五格口袋"></div>
     </section>
 
-    <button id="refresh" class="refresh" type="button">刷新口袋（10 軍餉）</button>
+    <button id="refresh" class="refresh" type="button">召喚（10 軍餉）</button>
+    <button id="skip-turn" class="refresh" type="button">跳過等待</button>
+    <p class="tool-links"><a class="tool-link" href="text-box-layout-editor.html">文字方塊位置編輯器</a></p>
     <p id="status" class="status" aria-live="polite">準備開始守城。</p>
 
     <footer>
@@ -76,13 +80,13 @@
       <p class="dialog-tag">第一次試玩</p>
       <h2 id="dialog-title">守住 10 波敵軍</h2>
       <ol id="dialog-list">
-        <li>花 10 個軍餉刷新；文字可直接拖到戰鬥格，或先點文字再點格子部署。</li>
+        <li>花 10 個軍餉召喚；文字可直接拖到戰鬥格，或先點文字再點格子部署。</li>
         <li>一般兵字可用相同文字合體；武將單字不能升級，也不能攻擊。</li>
         <li>把鏟子拖到鎖定格可以開地；口袋文字拖到不同戰鬥文字上可以交換。</li>
         <li>同名武將文字都能上場，但僅第一組會甦醒成將；其他同名文字保持沉睡。</li>
         <li>戰鬥場文字單點顯示攻擊範圍，快速再點一次才會開啟詳細資料。</li>
         <li>距離以文字格計算：刀 1 格；槍、騎、張飛 2 格；弓、關羽、馬超、趙雲 3 格；黃忠 4 格。</li>
-        <li>敵軍每波都會增強；第 3、6、9 波出現五行菁英，第 5、10 波由五行首領壓陣。</li>
+        <li>敵軍每波都會增強；第 4、7 波出現五行菁英，第 10 波由五行首領壓陣。</li>
       </ol>
       <div class="map-picker" aria-label="選擇五行地圖">
         <p>選擇地圖</p>
