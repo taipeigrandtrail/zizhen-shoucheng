@@ -20,6 +20,11 @@
   const GENERAL_XP_PER_WORD = 3;
   const GENERAL_XP_TO_NEXT = [0, 10, 18, 30, 45];
   const ENEMY_ELITES_AT = new Set([4, 7]);
+  const ENEMY_COUNTS_BY_WAVE = [7, 9, 11, 12, 13, 14, 16, 17, 18, 13];
+  const ENEMY_BASE_HEALTH_BY_WAVE = [50, 70, 100, 135, 180, 235, 300, 380, 480, 600];
+  const CHAPTER_HEALTH_MULTIPLIER = { earth: 1.00, water: 1.08, fire: 1.16, metal: 1.25, wood: 1.35 };
+  const ELEMENT_HEALTH_MULTIPLIER = { metal: 1.00, wood: 0.95, water: 1.00, fire: 0.90, earth: 1.15 };
+  const ELEMENT_SPEED_MULTIPLIER = { metal: 0.94, wood: 1.00, water: 1.05, fire: 1.15, earth: 0.88 };
   const INITIAL_UNLOCKED = new Set([0, 1, 2, 3, 4, 5]);
   const UNIT_TYPES = [
     { kind: "unit", glyph: "刀", weapon: "刀", name: "刀兵", damage: 8, attackSpeed: 1.2, rangeCells: 1, effect: "單體", role: "近距快攻" },
@@ -191,7 +196,7 @@
     INITIAL_UNLOCKED.forEach(index => { unlocked[index] = true; });
     return {
       units: Array(BOARD_SIZE).fill(null), unlocked, pocket: Array(POCKET_SIZE).fill(null), enemies: [],
-      food: 30, baseHealth: 3, wave: 1, wavePending: enemyCountForWave(1), defeated: 0,
+      food: 25, baseHealth: 3, wave: 1, wavePending: enemyCountForWave(1), defeated: 0,
       refreshCount: 0, spawnClock: 0, intermission: 0,
       generalCooldowns: {}, activeGeneralKeys: new Set(), skillActivationOrder: [],
       lijingStealUsed: false, lijingUnlocked: false,
@@ -838,7 +843,9 @@
 
   function updateSpawning(delta) {
     if (state.wavePending > 0) {
-      if (state.spawnClock >= 2.1) {
+      const spawnInterval = [1.8, 1.8, 1.8, 1.55, 1.55, 1.55, 1.35, 1.35, 1.35, 1.3][state.wave - 1];
+      const effectiveInterval = state.enemies.length ? spawnInterval : Math.min(spawnInterval, 0.5);
+      if (state.spawnClock >= effectiveInterval) {
         state.spawnClock = 0;
         spawnEnemy();
         state.wavePending -= 1;
@@ -852,8 +859,8 @@
     }
     if (state.intermission <= 0) {
       state.intermission = 2.5;
-      state.food += 8;
-      showStatus(`第 ${state.wave} 波守住了！獎勵 8 個軍餉。`);
+      state.food += 3;
+      showStatus(`第 ${state.wave} 波守住了！獎勵 3 個軍餉。`);
     } else {
       state.intermission -= delta;
       if (state.intermission <= 0) {
@@ -866,22 +873,22 @@
   }
 
   function spawnEnemy() {
-    const boss = state.wave === 10 && state.wavePending === 1;
-    const middleSpawn = Math.ceil(enemyCountForWave(state.wave) / 2);
-    const elite = !boss && ENEMY_ELITES_AT.has(state.wave) && state.wavePending === middleSpawn;
+    const spawnNumber = enemyCountForWave(state.wave) - state.wavePending + 1;
+    const boss = state.wave === 10 && spawnNumber === 4;
+    const elite = !boss && (state.wave === 4 && spawnNumber === 6 || state.wave === 7 && [6, 12].includes(spawnNumber));
     const rank = boss ? "boss" : elite ? "elite" : "normal";
     const enemyType = ENEMY_TYPES[selectedMapId] ?? ENEMY_TYPES.metal;
-    const waveHealth = (26 + state.wave * 13) * (1.15 ** (state.wave - 1));
-    const healthMultiplier = boss ? 6 : elite ? 2.4 : 1;
-    const speedMultiplier = boss ? 0.72 : elite ? 0.88 : 1;
-    const maxHealth = Math.round(waveHealth * healthMultiplier);
+    const waveHealth = ENEMY_BASE_HEALTH_BY_WAVE[state.wave - 1];
+    const healthMultiplier = boss ? 8 : elite ? 3 : 1;
+    const speedMultiplier = (boss ? 0.72 : elite ? 0.92 : 1) * ELEMENT_SPEED_MULTIPLIER[selectedMapId];
+    const maxHealth = Math.round(waveHealth * CHAPTER_HEALTH_MULTIPLIER[selectedMapId] * ELEMENT_HEALTH_MULTIPLIER[selectedMapId] * healthMultiplier);
     const enemy = {
       id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
       name: boss ? enemyType.bossName : elite ? enemyType.eliteName : "蝕墨兵",
       glyph: boss ? enemyType.bossGlyph : elite ? enemyType.eliteGlyph : enemyType.commonGlyph,
       element: selectedMapId, rank, health: maxHealth, maxHealth, progress: 0,
       speed: (0.0305 + state.wave * 0.0018) * speedMultiplier,
-      reward: boss ? 35 : elite ? 16 + state.wave : 5 + Math.floor(state.wave / 2),
+      reward: boss ? 10 : elite ? 3 : 1,
       boss, elite, hitUntil: 0
     };
     state.enemies.push(enemy);
@@ -1248,10 +1255,10 @@
       const stats = combatStats(unit, formations);
       const damage = stats.damage;
       animateUnitAttack(unitIndex, unit, eligible[0].enemy);
-      applyDamage(eligible[0].enemy, damage);
-      if (unit.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, damage * 0.45);
+      applyDamage(eligible[0].enemy, damage, unitAttackKind(unit));
+      if (unit.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, damage * 0.45, unitAttackKind(unit));
       if (unit.effect === "範圍") {
-        for (const nearby of eligible.slice(1, 3)) applyDamage(nearby.enemy, damage * 0.5);
+        for (const nearby of eligible.slice(1, 3)) applyDamage(nearby.enemy, damage * 0.5, unitAttackKind(unit));
       }
       unit.cooldown = 1 / stats.attackSpeed;
       collectDefeatedEnemies();
@@ -1269,10 +1276,10 @@
         .sort((a, b) => b.enemy.progress - a.enemy.progress);
       if (!eligible.length) return;
       animateGeneralAttack(formation, eligible[0].enemy, stats.attackKind);
-      applyDamage(eligible[0].enemy, stats.damage);
-      if (stats.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, stats.damage * 0.45);
+      applyDamage(eligible[0].enemy, stats.damage, stats.attackKind);
+      if (stats.effect === "穿透" && eligible[1]) applyDamage(eligible[1].enemy, stats.damage * 0.45, stats.attackKind);
       if (stats.effect === "範圍") {
-        for (const nearby of eligible.slice(1, 4)) applyDamage(nearby.enemy, stats.damage * 0.5);
+        for (const nearby of eligible.slice(1, 4)) applyDamage(nearby.enemy, stats.damage * 0.5, stats.attackKind);
       }
       const nextCooldown = 1 / stats.attackSpeed;
       parts.forEach(unit => { unit.cooldown = nextCooldown; });
@@ -1280,9 +1287,11 @@
     });
   }
 
-  function applyDamage(enemy, amount) {
+  function applyDamage(enemy, amount, hitKind = "ink") {
     enemy.health -= amount;
-    enemy.hitUntil = performance.now() + 150;
+    enemy.hitKind = hitKind;
+    enemy.lastDamage = Math.max(1, Math.round(amount));
+    enemy.hitUntil = performance.now() + 320;
   }
 
   function collectDefeatedEnemies(killerFormation = null) {
@@ -1476,7 +1485,7 @@
         setRenderedSlot(slot, "pocket-empty", `<span class="glyph">·</span><span class="label">等待召喚</span>`, `口袋 ${index + 1}，空`);
       } else if (item.kind === "shovel") {
         slot.className = `pocket-item shovel${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}`;
-        setRenderedSlot(slot, "pocket-shovel", `<span class="glyph">鏟</span><span class="label">拖到鎖定格</span>`, `口袋 ${index + 1}，鏟子，拖到鎖定格開地`);
+        setRenderedSlot(slot, "pocket-shovel", `<img class="shovel-icon" src="assets/items/golden-shovel.png" alt=""><span class="label">拖到鎖定格</span>`, `口袋 ${index + 1}，金色鏟子，拖到鎖定格開地`);
       } else {
         slot.className = `pocket-item${dragging ? " drag-source" : ""}${dropTarget ? " drop-target" : ""}${selected ? " selected" : ""}`;
         setRenderedSlot(slot, `pocket-${item.glyph}-${item.level}`, `<span class="glyph">${item.glyph}</span><span class="label">${item.name}・${"★".repeat(item.level)}</span>`, `口袋 ${index + 1}，${item.name}，${item.level} 星，${selected ? "已選取，" : ""}可點擊或拖曳合體`);
@@ -1490,12 +1499,13 @@
       const hp = Math.max(0, Math.min(100, enemy.health / enemy.maxHealth * 100));
       const point = routePoint(enemy.progress);
       const y = Math.max(8, Math.min(92, point.y + (index % 3 - 1) * 2.5));
-      const hit = enemy.hitUntil > performance.now() ? " hit" : "";
+      const isHit = enemy.hitUntil > performance.now();
+      const hit = isHit ? ` hit hit-${enemy.hitKind ?? "ink"}` : "";
       const stunned = (enemy.stunnedUntil ?? 0) > performance.now() ? " stunned" : "";
       const removable = enemy.removableStatus ? `<em class="enemy-status">${enemy.removableStatus}</em>` : "";
       const art = enemyArtSource(enemy);
       return `<div class="enemy-token ${enemy.rank} element-${enemy.element}${hit}${stunned}" style="--enemy-x:${point.x}%;--enemy-y:${y}%" aria-label="${enemy.name}，距離軍旗 ${Math.round((1 - enemy.progress) * 100)}%">
-        <span class="enemy-aura"></span>${art ? `<img class="enemy-art" src="${art}" alt="">` : ""}${removable}<strong>${enemy.glyph}</strong><span class="token-health"><i style="width:${hp}%"></i></span>
+        <span class="enemy-aura"></span>${art ? `<img class="enemy-art" src="${art}" alt="">` : ""}${removable}<strong>${enemy.glyph}</strong>${isHit ? `<span class="enemy-hit-mark"><i></i><b></b><em></em><u>-${enemy.lastDamage ?? 0}</u></span>` : ""}<span class="token-health"><i style="width:${hp}%"></i></span>
         <small>${enemy.rank === "boss" ? "首領" : enemy.rank === "elite" ? "菁英" : Math.ceil(enemy.health)}</small></div>`;
     }).join("");
   }
@@ -1704,7 +1714,7 @@
   }
 
   function showStatus(message) { dom.status.textContent = message; }
-  function enemyCountForWave(wave) { return 4 + wave; }
+  function enemyCountForWave(wave) { return ENEMY_COUNTS_BY_WAVE[wave - 1] ?? 0; }
 
   function previewUnit(glyph, level = 5) {
     const template = GENERAL_PARTS.find(part => part.glyph === glyph)
