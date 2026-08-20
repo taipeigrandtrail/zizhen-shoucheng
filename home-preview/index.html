@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="theme-color" content="#17293a">
   <meta name="description" content="《點墨成將》手機直式遊戲首頁互動原型">
   <title>點墨成將｜出征首頁</title>
@@ -14,31 +13,37 @@
     <div class="ambient-cloud cloud-a" aria-hidden="true"></div>
     <div class="ambient-cloud cloud-b" aria-hidden="true"></div>
 
-    <header class="topbar">
-      <button class="level-seal" type="button" data-open="profile" aria-label="開啟守字人履歷">
-        <span class="level-value">8</span>
-        <span class="level-copy"><b>守字人</b><small>印階</small></span>
-      </button>
+    <section class="top-hud" aria-label="守字人資源與印階">
+      <header class="topbar">
+        <button class="level-seal" type="button" data-open="profile" aria-label="開啟守字人履歷">
+          <span class="level-copy"><b>守字人印階</b></span>
+          <span class="avatar-stack" aria-hidden="true">
+            <span class="portrait-layer" id="player-portrait"><span>守</span></span>
+            <span class="avatar-frame"></span>
+            <span class="level-value"><small>Lv.</small><b id="player-level">8</b></span>
+          </span>
+        </button>
 
-      <button class="currency" type="button" data-open="coins" aria-label="查看文幣">
-        <span class="currency-icon coin-icon">文</span>
-        <span><small>文幣</small><b>1,250</b></span>
-        <i>＋</i>
-      </button>
+        <button class="currency" type="button" data-open="coins" aria-label="查看軍餉文幣">
+          <span class="currency-icon coin-icon" aria-hidden="true"></span>
+          <span class="currency-value"><small>軍餉／文幣</small><b id="coin-balance">1,250</b></span>
+          <i aria-hidden="true"></i>
+        </button>
 
-      <button class="currency" type="button" data-open="jade" aria-label="查看墨玉">
-        <span class="currency-icon jade-icon">◆</span>
-        <span><small>墨玉</small><b id="jade-balance">300</b></span>
-        <i>＋</i>
-      </button>
+        <button class="currency" type="button" data-open="jade" aria-label="查看墨玉">
+          <span class="currency-icon jade-icon" aria-hidden="true"></span>
+          <span class="currency-value"><small>墨玉</small><b id="jade-balance">300</b></span>
+          <i aria-hidden="true"></i>
+        </button>
 
-      <button class="round-button" type="button" data-open="settings" aria-label="開啟系統選單"><span aria-hidden="true">⚙</span></button>
-    </header>
+        <button class="round-button" type="button" data-open="settings" aria-label="開啟系統選單"><span class="settings-icon" aria-hidden="true"></span></button>
+      </header>
 
-    <section class="xp-row" aria-label="目前升級體驗">
-      <span>目前升級體驗</span>
-      <div class="xp-track"><i style="width:45%"></i></div>
-      <b>450／1,000</b>
+      <div class="xp-row">
+        <span id="xp-label">目前升級體驗</span>
+        <div class="xp-track" id="xp-progress" role="progressbar" aria-labelledby="xp-label" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="450"><i id="xp-fill" style="width:45%"></i></div>
+        <b class="xp-value"><span id="xp-current">450</span><span aria-hidden="true">／</span><span id="xp-target">1,000</span></b>
+      </div>
     </section>
 
     <button class="battle-pass" type="button" data-open="pass">

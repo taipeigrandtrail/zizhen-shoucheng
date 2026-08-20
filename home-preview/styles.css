@@ -39,9 +39,7 @@ body {
   padding: max(12px, env(safe-area-inset-top)) 14px calc(88px + env(safe-area-inset-bottom));
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(rgba(17, 40, 56, .92), rgba(19, 52, 67, .84) 38%, rgba(12, 29, 40, .96)),
-    repeating-linear-gradient(135deg, transparent 0 22px, rgba(229, 189, 99, .025) 23px 24px);
+  background: #0c3045 url("assets/ui/home/home_bg_ink_paper_v001.png") center top / cover no-repeat;
   box-shadow: 0 0 60px #000b;
 }
 
@@ -50,10 +48,7 @@ body {
   position: absolute;
   inset: 0;
   z-index: -2;
-  opacity: .28;
-  background-image: radial-gradient(circle, #d6e8e5 0 1px, transparent 1.6px);
-  background-size: 36px 36px;
-  mask-image: linear-gradient(to bottom, #000, transparent 72%);
+  background: linear-gradient(180deg, rgba(3, 16, 25, .18), transparent 32%, rgba(3, 16, 25, .12));
 }
 
 .ambient-cloud {
@@ -71,11 +66,35 @@ body {
 .cloud-a { top: 270px; left: -90px; }
 .cloud-b { top: 350px; right: -120px; animation-delay: -4s; }
 
+.top-hud {
+  --avatar-column: clamp(76px, 22vw, 116px);
+  --hud-gap: clamp(3px, 1vw, 7px);
+  --settings-size: 44px;
+  position: relative;
+  min-height: clamp(116px, 26.3vw, 142px);
+  margin: -2px -4px 0;
+  padding: 0 4px;
+}
+
+.top-hud::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: clamp(18px, 5.2vw, 28px);
+  background: url("assets/ui/home/hud_bottom_ornament_v001.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
 .topbar {
+  position: relative;
+  z-index: 1;
   display: grid;
-  grid-template-columns: 1.08fr 1fr 1fr 42px;
-  gap: 6px;
-  align-items: center;
+  grid-template-columns: var(--avatar-column) repeat(2, minmax(0, 1fr)) var(--settings-size);
+  gap: var(--hud-gap);
+  align-items: start;
 }
 
 .topbar button,
@@ -93,77 +112,273 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.level-seal,
-.currency {
+.level-seal {
   min-width: 0;
-  height: 48px;
-  padding: 4px 7px;
-  border: 1px solid rgba(229, 189, 99, .35) !important;
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(#203b4b, #0d202d);
-  box-shadow: inset 0 1px #ffffff25, 0 3px 8px #0006;
+  height: calc(clamp(72px, 18.5vw, 100px) + 22px);
+  padding: 0;
+  display: grid;
+  grid-template-rows: 22px 1fr;
+  justify-items: center;
+  overflow: visible;
+  background: transparent;
+}
+
+.level-copy {
+  min-width: 0;
+  color: #f3d89f;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 2px 2px #071018, 0 0 5px #000;
+}
+
+.level-copy b {
+  display: block;
+  overflow: hidden;
+  font-size: clamp(12px, 3.3vw, 17px);
+  letter-spacing: .04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-stack {
+  position: relative;
+  display: block;
+  width: clamp(72px, 18.5vw, 100px);
+  height: clamp(72px, 18.5vw, 100px);
+}
+
+.portrait-layer {
+  position: absolute;
+  inset: 9%;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 18%;
+  color: #acc8b3;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(120, 179, 148, .28), transparent 42%),
+    linear-gradient(145deg, #214b42, #0c2928);
+  font-size: clamp(23px, 6vw, 34px);
+  font-weight: 900;
+  text-shadow: 0 2px 2px #081919;
+}
+
+.avatar-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: url("assets/ui/home/hud_avatar_frame_v001.png") center / 100% 100% no-repeat;
+  pointer-events: none;
 }
 
 .level-value {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  flex: none;
-  border: 2px solid #9ed5c3;
-  border-radius: 7px;
-  color: #fff3c5;
-  font-size: 22px;
+  position: absolute;
+  z-index: 3;
+  right: -3px;
+  bottom: -2px;
+  width: clamp(36px, 9vw, 44px);
+  height: clamp(27px, 6.8vw, 33px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f7dfa1;
+  background: url("assets/ui/home/hud_level_badge_frame_v001.png") center / 100% 100% no-repeat;
+  font-variant-numeric: tabular-nums;
   font-weight: 900;
-  background: linear-gradient(145deg, #4b9c8b, #1d5e5d);
-  text-shadow: 0 2px #173c35;
-  box-shadow: inset 0 0 0 2px #173f3d, 0 0 12px #61b5a677;
+  line-height: 1;
+  text-shadow: 0 2px 1px #342112;
 }
 
-.level-copy,
-.currency > span:not(.currency-icon) { min-width: 0; text-align: left; line-height: 1.05; }
-.level-copy b, .currency b { display: block; font-size: 13px; white-space: nowrap; }
-.level-copy small, .currency small { display: block; margin-bottom: 2px; color: #bdd0d5; font-size: 9px; }
+.level-value small { font-size: clamp(8px, 2vw, 10px); }
+.level-value b { font-size: clamp(12px, 3vw, 15px); }
+
+.currency {
+  --capsule-top: clamp(23px, 5.4vw, 29px);
+  --resource-icon: clamp(32px, 7.4vw, 40px);
+  --add-size: clamp(28px, 6.3vw, 34px);
+  --value-left: calc(var(--resource-icon) - 4px);
+  --value-right: calc(var(--add-size) - 2px);
+  position: relative;
+  min-width: 0;
+  height: clamp(62px, 13.7vw, 74px);
+  padding: var(--capsule-top) var(--value-right) 0 var(--value-left);
+  display: grid;
+  place-items: center;
+  overflow: visible;
+  background: transparent;
+  font-variant-numeric: tabular-nums;
+}
+
+.currency::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: var(--capsule-top);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: url("assets/ui/home/hud_resource_capsule_v001.png") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+.currency > * { position: relative; z-index: 1; }
+
+.currency-value {
+  min-width: 0;
+  width: 100%;
+  line-height: 1;
+  text-align: center;
+}
+
+.currency small {
+  position: absolute;
+  top: calc(-1 * var(--capsule-top));
+  left: calc(-1 * var(--value-left));
+  width: calc(100% + var(--value-left) + var(--value-right));
+  color: #f3d89f;
+  font-size: clamp(10px, 2.6vw, 14px);
+  font-weight: 900;
+  letter-spacing: .03em;
+  line-height: var(--capsule-top);
+  text-align: center;
+  text-shadow: 0 2px 2px #071018, 0 0 5px #000;
+  white-space: nowrap;
+}
+
+.currency b {
+  display: block;
+  overflow: hidden;
+  color: #f7ddb0;
+  font-size: clamp(15px, 4.1vw, 22px);
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 1px #1d120c;
+  white-space: nowrap;
+}
 
 .currency-icon {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border-radius: 50%;
-  font-size: 12px;
-  font-weight: 900;
+  position: absolute;
+  top: calc(var(--capsule-top) + 3px);
+  left: 0;
+  width: var(--resource-icon);
+  height: var(--resource-icon);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  pointer-events: none;
 }
 
-.coin-icon { color: #68451d; background: linear-gradient(#f2ce74, #a56c2c); border: 1px solid #ffeab1; }
-.jade-icon { color: #dffbf0; background: linear-gradient(145deg, #69c4ad, #1c6b63); transform: rotate(45deg); border-radius: 7px; }
-.currency i { margin-left: auto; color: #f8d682; font-style: normal; font-weight: 900; }
+.coin-icon { background-image: url("assets/ui/home/hud_currency_coin_v001.png"); }
+.jade-icon { background-image: url("assets/ui/home/hud_currency_jade_v001.png"); }
+
+.currency i {
+  position: absolute;
+  top: calc(var(--capsule-top) + 5px);
+  right: 2px;
+  width: var(--add-size);
+  height: var(--add-size);
+  border: 1px solid #d0a05e;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 35%, #8c6543, #3a2a22 68%);
+  box-shadow: inset 0 0 0 2px #211914, inset 0 1px #f2c87b66;
+  pointer-events: none;
+}
+
+.currency i::before,
+.currency i::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52%;
+  height: 2px;
+  border-radius: 2px;
+  background: #f2d18e;
+  box-shadow: 0 1px #342216;
+  transform: translate(-50%, -50%);
+}
+
+.currency i::after { transform: translate(-50%, -50%) rotate(90deg); }
 
 .round-button {
-  width: 42px;
-  height: 42px;
-  border: 2px solid #a9824b !important;
-  border-radius: 50%;
-  color: #ead39b;
-  background: linear-gradient(#3c3028, #191817);
-  box-shadow: inset 0 0 0 3px #191817, 0 3px 8px #0008;
+  position: relative;
+  width: var(--settings-size);
+  height: var(--settings-size);
+  min-width: 44px;
+  min-height: 44px;
+  margin-top: var(--capsule-top, clamp(23px, 5.4vw, 29px));
+  padding: 0;
+  background: url("assets/ui/home/hud_round_button_frame_v001.png") center / 100% 100% no-repeat;
+}
+
+.settings-icon {
+  position: absolute;
+  inset: 9px;
+  background: url("assets/ui/home/hud_settings_gear_v001.png") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.level-seal:focus-visible,
+.currency:focus-visible,
+.round-button:focus-visible {
+  outline: 3px solid #fff0a7;
+  outline-offset: 2px;
 }
 
 .xp-row {
+  position: absolute;
+  z-index: 2;
+  top: clamp(62px, 14vw, 76px);
+  right: calc(var(--settings-size) + var(--hud-gap));
+  left: calc(var(--avatar-column) + var(--hud-gap));
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 7px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label value"
+    "track track";
+  gap: 3px 6px;
   align-items: center;
-  margin: 6px 3px 8px;
-  color: #c5d7db;
-  font-size: 9px;
+  margin: 0;
+  color: #a9d5d4;
+  line-height: 1;
+  pointer-events: none;
 }
 
-.xp-track,
+.xp-row > span {
+  grid-area: label;
+  overflow: hidden;
+  font-size: clamp(11px, 2.9vw, 16px);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 2px #061117;
+  white-space: nowrap;
+}
+
+.xp-value {
+  grid-area: value;
+  color: #d6e9e5;
+  font: 900 clamp(8px, 1.9vw, 10px)/1 "Microsoft JhengHei", sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.xp-track {
+  grid-area: track;
+  height: clamp(12px, 3.2vw, 17px);
+  padding: 3px clamp(7px, 1.8vw, 10px);
+  overflow: hidden;
+  background: url("assets/ui/home/hud_xp_track_v001.png") center / 100% 100% no-repeat;
+}
+
+.xp-track i {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2d899c, #9de8ed 76%, #defdf5);
+  box-shadow: 0 0 8px #61d7e2;
+}
+
 .pass-progress {
   height: 8px;
   overflow: hidden;
@@ -173,7 +388,6 @@ body {
   box-shadow: inset 0 1px 3px #000;
 }
 
-.xp-track i,
 .pass-progress i {
   display: block;
   height: 100%;
@@ -711,11 +925,6 @@ body {
 
 @media (max-width: 390px) {
   .app-shell { padding-left: 9px; padding-right: 9px; }
-  .topbar { grid-template-columns: 1fr 1fr 1fr 38px; gap: 4px; }
-  .level-copy { display: none; }
-  .level-seal { justify-content: center; }
-  .currency { padding-inline: 5px; }
-  .currency-icon { display: none; }
   .diorama { height: 270px; }
   .island { transform: translateX(-50%) scale(.9); }
   .stage-record { margin-top: -30px; }
@@ -730,82 +939,7 @@ body {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
 
-/* v0.3：依首頁模擬圖重建的材質化元件層 */
-.app-shell {
-  background:
-    radial-gradient(ellipse at 48% 44%, rgba(41, 104, 123, .28), transparent 38%),
-    radial-gradient(circle at 12% 20%, rgba(204, 225, 216, .07) 0 1px, transparent 2px),
-    radial-gradient(circle at 78% 64%, rgba(0, 0, 0, .16) 0 2px, transparent 3px),
-    linear-gradient(180deg, #0d2634 0%, #123e50 42%, #0b2a39 72%, #071923 100%);
-}
-
-.app-shell::before {
-  opacity: .38;
-  background:
-    repeating-linear-gradient(18deg, transparent 0 17px, rgba(226, 210, 169, .025) 18px 19px),
-    radial-gradient(ellipse at 20% 40%, rgba(0, 0, 0, .16), transparent 27%),
-    radial-gradient(ellipse at 76% 25%, rgba(255, 255, 255, .04), transparent 24%);
-  background-size: auto;
-  mask-image: none;
-}
-
-.topbar {
-  position: relative;
-  padding: 2px 2px 0;
-  border-bottom: 2px solid #9b7540;
-  background: linear-gradient(180deg, rgba(7, 20, 29, .32), rgba(6, 19, 28, .08));
-}
-
-.topbar::after {
-  content: "";
-  position: absolute;
-  left: -14px;
-  right: -14px;
-  bottom: -5px;
-  height: 3px;
-  background: linear-gradient(90deg, #4a331e, #d0a35a 18%, #5d4427 50%, #d0a35a 82%, #4a331e);
-  box-shadow: 0 2px 5px #0008;
-}
-
-.level-seal {
-  border-color: #b7d7c0 !important;
-  background: transparent;
-  box-shadow: none;
-}
-
-.level-value {
-  width: 42px;
-  height: 42px;
-  border: 2px solid #d1dfba;
-  color: #f6e4aa;
-  background: linear-gradient(145deg, #64ad8d, #2f6c61);
-  box-shadow: inset 0 0 0 3px #254b47, 0 0 12px #62c7b477;
-}
-
-.currency {
-  border-color: transparent !important;
-  border-radius: 4px;
-  background: linear-gradient(180deg, transparent 0 28%, rgba(9, 17, 21, .62) 29% 82%, transparent 83%);
-  box-shadow: none;
-}
-
-.currency i {
-  display: grid;
-  place-items: center;
-  width: 21px;
-  height: 21px;
-  border: 1px solid #e2be72;
-  border-radius: 50%;
-  color: #f9dea1;
-  background: #705033;
-  box-shadow: inset 0 1px #fff4c84d;
-}
-
-.round-button { font-size: 20px; background: radial-gradient(circle, #73533a, #241d19 65%); }
-
-.xp-row { margin-top: 7px; }
-.xp-track { height: 10px; border-color: #a87a3c; }
-
+/* v0.3：依首頁模擬圖重建的其餘材質化元件層 */
 .battle-pass {
   width: calc(100% - 8px);
   height: 82px;
@@ -815,7 +949,7 @@ body {
   grid-template-rows: 1fr 10px;
   border: 0;
   border-radius: 0;
-  background: url("assets/ui/home/pass_scroll_empty_v2.webp") center / 100% 100% no-repeat;
+  background: url("assets/ui/home/pass_scroll_empty_v2.png") center / 100% 100% no-repeat;
   box-shadow: none;
 }
 
@@ -895,7 +1029,7 @@ body {
   min-height: 80px;
   border: 0;
   border-radius: 0;
-  background: url("assets/ui/home/button_deploy_empty_v1.webp") center / 100% 100% no-repeat;
+  background: url("assets/ui/home/button_deploy_empty_v1.png") center / 100% 100% no-repeat;
   box-shadow: 0 8px 0 rgba(28, 11, 9, .6), 0 11px 16px #0008;
 }
 .deploy-button:active { transform: translateY(5px); box-shadow: 0 3px 0 rgba(28, 11, 9, .6), 0 6px 10px #0007; }

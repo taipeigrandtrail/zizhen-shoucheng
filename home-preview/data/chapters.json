@@ -21,7 +21,13 @@
         "stars": 0,
         "unlocked": true,
         "palette": { "color": "#a58255", "dark": "#614c35", "glow": "rgba(201,159,91,.4)" },
-        "art_path": "assets/art/dioramas/ch01_earth_pass/diorama_ch01_earth_pass_master_v001.webp"
+        "art_path": "assets/art/dioramas/ch01_earth_pass/full_states/diorama_ch01_earth_pass_p1_explore_full_v001.png",
+        "phase_art_paths": [
+          { "phase_id": "p1_explore", "stage_range": [1, 3], "path": "assets/art/dioramas/ch01_earth_pass/full_states/diorama_ch01_earth_pass_p1_explore_full_v001.png" },
+          { "phase_id": "p2_bend", "stage_range": [4, 6], "path": "assets/art/dioramas/ch01_earth_pass/full_states/diorama_ch01_earth_pass_p2_bend_full_v001.png" },
+          { "phase_id": "p3_winding", "stage_range": [7, 9], "path": "assets/art/dioramas/ch01_earth_pass/full_states/diorama_ch01_earth_pass_p3_winding_full_v001.png" },
+          { "phase_id": "p4_finale", "stage_range": [10, 10], "path": "assets/art/dioramas/ch01_earth_pass/full_states/diorama_ch01_earth_pass_p4_finale_full_v001.png" }
+        ]
       },
       "briefing": {
         "weakness": "木屬傷害",
@@ -32,11 +38,11 @@
       "boss": { "id": "yue", "glyph": "岳", "element_weakness": "wood", "mechanic_counter": "interrupt_armor" },
       "final_topology": {
         "routes": [
-          { "route_id": "main", "spawn": [3,0], "nodes": [[3,0],[3,1],[3,2],[3,3],[4,3],[5,3],[5,4],[5,5],[5,6],[4,6],[3,6],[3,7],[3,8],[3,9],[3,10]], "flag": [3,10], "weight": 1 }
+          { "route_id": "main", "spawn": [2,0], "nodes": [[2,0],[2,1],[2,2],[2,3],[3,3],[4,3],[5,3],[6,3],[7,3],[8,3],[8,4],[8,5],[8,6],[7,6],[6,6],[5,6],[4,6],[3,6],[2,6],[1,6],[1,7],[1,8],[1,9],[2,9],[3,9],[3,10]], "flag": [3,10], "weight": 1 }
         ],
         "flag": [3,10],
         "void_obstacles": [],
-        "initial_unlocked_tiles": [[1,1],[2,1],[4,1],[5,1],[2,4],[3,4],[2,5],[3,5],[6,4],[6,5]]
+        "initial_unlocked_tiles": [[0,1],[1,1],[4,1],[5,1],[2,4],[3,4],[2,5],[3,5],[6,4],[6,5]]
       }
     },
     {

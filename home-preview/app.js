@@ -4,6 +4,12 @@
   const CHAPTERS_URL = "data/chapters.json";
   const CHEST_STORAGE_KEY = "dianmo.home.chestQueue.v1";
   const HOUR_MS = 60 * 60 * 1000;
+  const HOME_HUD_STATE = Object.freeze({
+    level: 8,
+    coins: 1250,
+    xpCurrent: 450,
+    xpTarget: 1000
+  });
   const CHEST_TYPES = Object.freeze({
     wood: { name: "古木字匣", durationMs: 3 * HOUR_MS, durationLabel: "3 小時", maxJade: 15, chestClass: "chest-wood" },
     bronze: { name: "青銅字匣", durationMs: 8 * HOUR_MS, durationLabel: "8 小時", maxJade: 40, chestClass: "chest-bronze" },
@@ -38,6 +44,16 @@
   let stages = [];
   let generals = [];
 
+  function resolvePhaseArt(home) {
+    if (!Array.isArray(home?.phase_art_paths)) return home?.art_path ?? null;
+    const currentStage = Number(home.current_stage);
+    const phase = home.phase_art_paths.find(entry => {
+      const [start, end] = Array.isArray(entry?.stage_range) ? entry.stage_range : [];
+      return Number.isInteger(start) && Number.isInteger(end) && currentStage >= start && currentStage <= end;
+    });
+    return phase?.path ?? home.art_path ?? null;
+  }
+
   function mapChapterData(payload) {
     if (!Array.isArray(payload?.element_definitions) || !Array.isArray(payload?.chapters)) {
       throw new Error("chapters.json 缺少 element_definitions 或 chapters");
@@ -70,7 +86,7 @@
         color: palette.color,
         dark: palette.dark,
         glow: palette.glow,
-        art: home.art_path,
+        art: resolvePhaseArt(home),
         weakness: briefing.weakness,
         counter: briefing.counter,
         lesson: briefing.lesson,
@@ -108,6 +124,20 @@
     return String(value).replace(/[&<>'"]/g, char => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
     })[char]);
+  }
+
+  function renderHomeHud() {
+    const xpTarget = Math.max(1, HOME_HUD_STATE.xpTarget);
+    const xpCurrent = Math.min(Math.max(0, HOME_HUD_STATE.xpCurrent), xpTarget);
+    const xpProgress = $("#xp-progress");
+
+    $("#player-level").textContent = HOME_HUD_STATE.level.toLocaleString("zh-Hant");
+    $("#coin-balance").textContent = HOME_HUD_STATE.coins.toLocaleString("zh-Hant");
+    $("#xp-current").textContent = xpCurrent.toLocaleString("zh-Hant");
+    $("#xp-target").textContent = xpTarget.toLocaleString("zh-Hant");
+    $("#xp-fill").style.width = `${(xpCurrent / xpTarget) * 100}%`;
+    xpProgress.setAttribute("aria-valuenow", String(xpCurrent));
+    xpProgress.setAttribute("aria-valuemax", String(xpTarget));
   }
 
   function renderStage() {
@@ -247,8 +277,8 @@
 
   function showSimplePanel(type) {
     const panels = {
-      profile: ["守字人履歷", "目前印階 8；已收集 1／36 名武將。履歷與雲端存檔不列入第一版。"],
-      coins: ["文幣", "持有 1,250。用於提升完整武將的字魂等級，不用來抽單字。"],
+      profile: ["守字人履歷", `目前印階 ${HOME_HUD_STATE.level.toLocaleString("zh-Hant")}；已收集 1／36 名武將。履歷與雲端存檔不列入第一版。`],
+      coins: ["文幣", `持有 ${HOME_HUD_STATE.coins.toLocaleString("zh-Hant")}。用於提升完整武將的字魂等級，不用來抽單字。`],
       jade: ["墨玉", `持有 ${chestState?.jade ?? 300}。可依字匣剩餘時間等比例支付墨玉立即完成；本機原型會保存操作，正式版由伺服器校驗。`],
       settings: ["系統選單", "音效、震動、畫質與帳號綁定將在戰鬥原型穩定後接上。"],
       pass: ["天書字脈", "首頁保留免費進度入口。付費戰令不是第一版開發項目。"],
@@ -570,6 +600,7 @@
       role: stage.role
     }));
     selectedGeneralIndex = Math.max(0, generals.findIndex(general => general.id === stages[0].generalId));
+    renderHomeHud();
     initializeChestQueue();
     bindInteractions();
     renderStage();
