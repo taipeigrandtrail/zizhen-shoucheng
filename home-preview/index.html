@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#17293a">
+  <meta name="description" content="《點墨成將》手機直式遊戲首頁互動原型">
+  <title>點墨成將｜出征首頁</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell" aria-label="點墨成將遊戲首頁">
+    <div class="ambient-cloud cloud-a" aria-hidden="true"></div>
+    <div class="ambient-cloud cloud-b" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <button class="level-seal" type="button" data-open="profile" aria-label="開啟守字人履歷">
+        <span class="level-value">8</span>
+        <span class="level-copy"><b>守字人</b><small>印階</small></span>
+      </button>
+
+      <button class="currency" type="button" data-open="coins" aria-label="查看文幣">
+        <span class="currency-icon coin-icon">文</span>
+        <span><small>文幣</small><b>1,250</b></span>
+        <i>＋</i>
+      </button>
+
+      <button class="currency" type="button" data-open="jade" aria-label="查看墨玉">
+        <span class="currency-icon jade-icon">◆</span>
+        <span><small>墨玉</small><b id="jade-balance">300</b></span>
+        <i>＋</i>
+      </button>
+
+      <button class="round-button" type="button" data-open="settings" aria-label="開啟系統選單"><span aria-hidden="true">⚙</span></button>
+    </header>
+
+    <section class="xp-row" aria-label="目前升級體驗">
+      <span>目前升級體驗</span>
+      <div class="xp-track"><i style="width:45%"></i></div>
+      <b>450／1,000</b>
+    </section>
+
+    <button class="battle-pass" type="button" data-open="pass">
+      <span class="scroll-mark">卷</span>
+      <span class="pass-copy"><small>青龍季</small><b>天書字脈・第 5 階</b></span>
+      <span class="pass-progress"><i style="width:62%"></i></span>
+      <span class="claim-stamp">可領取</span>
+    </button>
+
+    <section class="stage-zone" aria-label="主線關卡選擇">
+      <div class="stage-heading">
+        <button class="stage-arrow" type="button" id="stage-prev" aria-label="上一章">‹</button>
+        <div>
+          <span id="chapter-kicker">第一章・土字脈</span>
+          <h1 id="stage-name">土城關</h1>
+        </div>
+        <button class="stage-arrow" type="button" id="stage-next" aria-label="下一章">›</button>
+      </div>
+
+      <button class="diorama" id="stage-info" type="button" aria-label="查看土城關關卡情報">
+        <span class="stage-lock" id="stage-lock" hidden>未解鎖</span>
+        <span class="moon-glow" aria-hidden="true"></span>
+        <span class="ink-sun" id="element-glyph" aria-hidden="true">土</span>
+        <span class="mountain mountain-a" aria-hidden="true"></span>
+        <span class="mountain mountain-b" aria-hidden="true"></span>
+        <img class="diorama-art" id="stage-art" alt="" hidden>
+        <span class="island" aria-hidden="true">
+          <i class="island-top"></i>
+          <i class="island-side"></i>
+          <span class="castle">
+            <i class="tower tower-left"></i>
+            <i class="tower tower-right"></i>
+            <i class="gatehouse"><em></em></i>
+            <i class="flag"><em>城</em></i>
+          </span>
+          <span class="stage-feature" id="stage-feature">岳</span>
+        </span>
+        <span class="diorama-shadow" aria-hidden="true"></span>
+      </button>
+
+      <button class="stage-record" id="record-button" type="button" data-open="record">
+        <span>章節修復度</span>
+        <b id="stage-progress">第 1／10 關・0／30 星</b>
+        <i>關卡情報</i>
+      </button>
+    </section>
+
+    <section class="action-row" aria-label="出征操作">
+      <button class="side-action deck-button" type="button" data-open="deck">
+        <span class="hero-glyph" id="hero-glyph">張</span>
+        <span><b id="hero-name">張飛 Lv.1</b><small id="hero-role">土・槍</small></span>
+      </button>
+
+      <button class="deploy-button" id="deploy-button" type="button">
+        <span class="crossed-blades" aria-hidden="true">×</span>
+        <b>出 征</b>
+        <small>十波守城</small>
+      </button>
+
+      <button class="side-action mode-button" type="button" data-open="mode">
+        <span class="tiger-mark">虎</span>
+        <span><b id="mode-label">征戰</b><small>模式</small></span>
+      </button>
+    </section>
+
+    <section class="reward-section" aria-labelledby="reward-title">
+      <div class="section-title">
+        <h2 id="reward-title">戰後字匣</h2>
+        <span id="chest-capacity" role="status" aria-live="polite">4／4 槽・同時解鎖 1 匣</span>
+      </div>
+      <div class="chest-grid" id="chest-grid" aria-label="字匣解鎖佇列">
+        <button class="chest-slot unlocking" type="button" data-chest-slot="0" aria-label="古木字匣，解鎖中">
+          <span class="chest chest-wood"><i></i></span>
+          <b>古木字匣</b>
+          <small>解鎖中・3 小時</small>
+        </button>
+        <button class="chest-slot waiting" type="button" data-chest-slot="1" aria-label="青銅字匣，等待解鎖，需 8 小時">
+          <span class="chest chest-bronze"><i></i></span>
+          <b>青銅字匣</b>
+          <small>等待解鎖・8 小時</small>
+        </button>
+        <button class="chest-slot waiting" type="button" data-chest-slot="2" aria-label="紫金字匣，等待解鎖，需 12 小時">
+          <span class="chest chest-purple"><i></i></span>
+          <b>紫金字匣</b>
+          <small>等待解鎖・12 小時</small>
+        </button>
+        <button class="chest-slot waiting" type="button" data-chest-slot="3" aria-label="遠古巨匣，等待解鎖，需 24 小時">
+          <span class="chest chest-ancient"><i></i></span>
+          <b>遠古巨匣</b>
+          <small>等待解鎖・24 小時</small>
+        </button>
+      </div>
+      <p class="chest-rule-note">字匣槽滿時僅顯示提醒；戰鬥掉落由正式獎勵系統判定。</p>
+    </section>
+
+    <nav class="bottom-nav" aria-label="主要功能">
+      <button type="button" data-tab="shop"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M13 21h22l-2 17H15zM18 21v-6h12v6M10 18h28M19 38v5m10-5v5"/></svg></span><b>商閣</b></button>
+      <button type="button" data-tab="collection"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M10 10h12v28H10zM26 7h12v31H26zM13 15h6m-6 6h6m16-7h-6m6 6h-6m6 6h-6"/></svg></span><b>字庫</b><i>1</i></button>
+      <button class="active" type="button" data-tab="home"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M10 8l28 31M38 8L10 39M8 6l6 1-5 5m31-6l-6 1 5 5M8 42l6-1-5-5m31 6l-6-1 5-5"/></svg></span><b>出征</b></button>
+      <button type="button" data-tab="clan"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M24 6l15 6v11c0 10-6 16-15 20C15 39 9 33 9 23V12zM17 20h14M19 26h10M24 14v18"/></svg></span><b>軍盟</b></button>
+      <button type="button" data-tab="trial"><span class="nav-glyph" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M9 15l8-8 7 5 7-5 8 8-3 22-12 6-12-6zM16 23l5 3m11-3l-5 3M19 34h10"/></svg></span><b>修羅</b></button>
+    </nav>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <section class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="modal-close" type="button" aria-label="關閉">×</button>
+      <p class="modal-kicker" id="modal-kicker">章節情報</p>
+      <h2 id="modal-title">土城關</h2>
+      <div id="modal-content"></div>
+      <button class="modal-primary" id="modal-primary" type="button">知道了</button>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+{
+  "schema_version": 2,
+  "coordinate_order": ["x", "y"],
+  "element_definitions": [
+    { "id": "earth", "display_name": "土" },
+    { "id": "wood", "display_name": "木" },
+    { "id": "water", "display_name": "水" },
+    { "id": "fire", "display_name": "火" },
+    { "id": "metal", "display_name": "金" },
+    { "id": "void", "display_name": "無" }
+  ],
+  "chapters": [
+    {
+      "chapter_id": 1,
+      "name": "土城關",
+      "element_id": "earth",
+      "featured_general": { "id": "zhang_fei", "display_name": "張飛", "glyph": "張", "role_display": "土・槍" },
+      "home_display": {
+        "feature_glyph": "岳",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": true,
+        "palette": { "color": "#a58255", "dark": "#614c35", "glow": "rgba(201,159,91,.4)" },
+        "art_path": "assets/art/dioramas/ch01_earth_pass/diorama_ch01_earth_pass_master_v001.webp"
+      },
+      "briefing": {
+        "weakness": "木屬傷害",
+        "counter": "在蓄力時打斷，並用關羽破除石甲。",
+        "lesson": "第一章先學會雙字組合、金鏟開地、護盾與控場。",
+        "enemy": "岩卒帶有土石護盾；首領岳每走四格會蓄力震地。"
+      },
+      "boss": { "id": "yue", "glyph": "岳", "element_weakness": "wood", "mechanic_counter": "interrupt_armor" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "main", "spawn": [3,0], "nodes": [[3,0],[3,1],[3,2],[3,3],[4,3],[5,3],[5,4],[5,5],[5,6],[4,6],[3,6],[3,7],[3,8],[3,9],[3,10]], "flag": [3,10], "weight": 1 }
+        ],
+        "flag": [3,10],
+        "void_obstacles": [],
+        "initial_unlocked_tiles": [[1,1],[2,1],[4,1],[5,1],[2,4],[3,4],[2,5],[3,5],[6,4],[6,5]]
+      }
+    },
+    {
+      "chapter_id": 2,
+      "name": "青藤林",
+      "element_id": "wood",
+      "featured_general": { "id": "guan_yu", "display_name": "關羽", "glyph": "關", "role_display": "木・刀" },
+      "home_display": {
+        "feature_glyph": "藤",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": false,
+        "palette": { "color": "#668d55", "dark": "#2f5945", "glow": "rgba(111,181,98,.42)" },
+        "art_path": null
+      },
+      "briefing": {
+        "weakness": "金屬傷害",
+        "counter": "火焰灼燒可停止再生，範圍攻擊優先清除護衛。",
+        "lesson": "S 型長路線讓玩家練習持續傷害與多個轉角的集火。",
+        "enemy": "藤卒死亡後分裂，枝將會召喚護衛並提供回血。"
+      },
+      "boss": { "id": "man", "glyph": "蔓", "element_weakness": "metal", "mechanic_counter": "burn_blocks_regeneration" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "main", "spawn": [0,0], "nodes": [[0,0],[0,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[6,3],[6,4],[6,5],[5,5],[4,5],[3,5],[2,5],[2,6],[2,7],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],[7,9],[7,10]], "flag": [7,10], "weight": 1 }
+        ],
+        "flag": [7,10],
+        "void_obstacles": [],
+        "initial_unlocked_tiles": [[1,0],[2,0],[3,0],[4,0],[1,3],[2,3],[3,3],[4,3],[4,6],[5,6]]
+      }
+    },
+    {
+      "chapter_id": 3,
+      "name": "水澤道",
+      "element_id": "water",
+      "featured_general": { "id": "zhao_yun", "display_name": "趙雲", "glyph": "趙", "role_display": "水・槍" },
+      "home_display": {
+        "feature_glyph": "潮",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": false,
+        "palette": { "color": "#4b91a9", "dark": "#28556f", "glow": "rgba(91,178,211,.42)" },
+        "art_path": null
+      },
+      "briefing": {
+        "weakness": "土屬傷害",
+        "counter": "定身可破除推進水牆，範圍與近戰能命中水霧目標。",
+        "lesson": "左右雙路匯流，考驗前期分守與中路集中火力。",
+        "enemy": "波卒高速衝刺；流將高血量時進入水霧，免疫遠程單體鎖定。"
+      },
+      "boss": { "id": "tao", "glyph": "濤", "element_weakness": "earth", "mechanic_counter": "root_breaks_wave" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "left", "spawn": [0,0], "nodes": [[0,0],[0,1],[0,2],[0,3],[1,3],[1,4],[2,4],[2,5],[3,5],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10]], "flag": [4,10], "weight": 1 },
+          { "route_id": "right", "spawn": [8,0], "nodes": [[8,0],[8,1],[8,2],[8,3],[7,3],[7,4],[6,4],[6,5],[5,5],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10]], "flag": [4,10], "weight": 1 }
+        ],
+        "flag": [4,10],
+        "void_obstacles": [],
+        "initial_unlocked_tiles": [[3,1],[4,1],[5,1],[3,2],[4,2],[5,2],[1,6],[2,6],[6,6],[7,6]]
+      }
+    },
+    {
+      "chapter_id": 4,
+      "name": "火裂谷",
+      "element_id": "fire",
+      "featured_general": { "id": "huang_zhong", "display_name": "黃忠", "glyph": "黃", "role_display": "火・弓" },
+      "home_display": {
+        "feature_glyph": "焰",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": false,
+        "palette": { "color": "#b85a3c", "dark": "#6f2e28", "glow": "rgba(235,99,55,.42)" },
+        "art_path": null
+      },
+      "briefing": {
+        "weakness": "水屬傷害",
+        "counter": "水甲抵抗灼燒，減速可阻止狂暴衝鋒。",
+        "lesson": "雙側繞行在中央交會，適合遠距狙擊與範圍爆發。",
+        "enemy": "焰卒死亡後產生壓制熱浪；炎將每失去 20% 生命便加速並衝刺一次。"
+      },
+      "boss": { "id": "jin", "glyph": "燼", "element_weakness": "water", "mechanic_counter": "slow_and_water_armor" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "left_loop", "spawn": [4,0], "nodes": [[4,0],[4,1],[4,2],[3,2],[2,2],[1,2],[1,3],[1,4],[1,5],[2,5],[3,5],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10]], "flag": [4,10], "weight": 1 },
+          { "route_id": "right_loop", "spawn": [4,0], "nodes": [[4,0],[4,1],[4,2],[5,2],[6,2],[7,2],[7,3],[7,4],[7,5],[6,5],[5,5],[4,5],[4,6],[4,7],[4,8],[4,9],[4,10]], "flag": [4,10], "weight": 1 }
+        ],
+        "flag": [4,10],
+        "void_obstacles": [],
+        "initial_unlocked_tiles": [[2,3],[3,3],[5,3],[6,3],[2,4],[3,4],[5,4],[6,4],[2,6],[3,6]]
+      }
+    },
+    {
+      "chapter_id": 5,
+      "name": "鑄鐵關",
+      "element_id": "metal",
+      "featured_general": { "id": "ma_chao", "display_name": "馬超", "glyph": "馬", "role_display": "金・騎" },
+      "home_display": {
+        "feature_glyph": "鎧",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": false,
+        "palette": { "color": "#a99b78", "dark": "#5b5b58", "glow": "rgba(225,210,169,.4)" },
+        "art_path": null
+      },
+      "briefing": {
+        "weakness": "火屬傷害",
+        "counter": "從側後方輸出；使用單發爆發，避免累積箭矢反彈。",
+        "lesson": "長 U 型折返讓穿透、破甲與多面火力都有發揮空間。",
+        "enemy": "鋒卒具有高護甲；鏡將每受五次真正箭矢會回射劍氣，短暫封住弓兵普攻。"
+      },
+      "boss": { "id": "rui", "glyph": "銳", "element_weakness": "fire", "mechanic_counter": "flank_and_single_hit_burst" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "main", "spawn": [1,0], "nodes": [[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7],[1,8],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],[7,7],[7,6],[7,5],[7,4],[7,3],[7,2],[6,2],[5,2],[4,2],[4,3],[4,4],[4,5],[4,6]], "flag": [4,6], "weight": 1 }
+        ],
+        "flag": [4,6],
+        "void_obstacles": [],
+        "initial_unlocked_tiles": [[2,1],[3,1],[4,1],[5,1],[2,3],[3,3],[5,3],[6,3],[5,5],[6,5]]
+      }
+    },
+    {
+      "chapter_id": 6,
+      "name": "蝕墨深淵",
+      "element_id": "void",
+      "featured_general": { "id": "li_jing", "display_name": "李竟", "glyph": "竟", "role_display": "無・筆" },
+      "home_display": {
+        "feature_glyph": "蝕",
+        "current_stage": 1,
+        "stars": 0,
+        "unlocked": false,
+        "palette": { "color": "#8c7aa4", "dark": "#413952", "glow": "rgba(177,145,218,.38)" },
+        "art_path": null
+      },
+      "briefing": {
+        "weakness": "隨階段變換",
+        "counter": "李竟驅散抹名，全隊快速重組姓名並保持五行混編。",
+        "lesson": "雙向突襲與中央深淵，終章綜合考驗五行與臨場改字。",
+        "enemy": "蝕會抹除真名、封印技能，並在每個生命階段變換弱點。"
+      },
+      "boss": { "id": "shi", "glyph": "蝕", "element_weakness": "rotating", "mechanic_counter": "restore_names_and_cleanse" },
+      "final_topology": {
+        "routes": [
+          { "route_id": "left", "spawn": [0,0], "nodes": [[0,0],[0,1],[0,2],[1,2],[1,3],[2,3],[2,4],[2,5],[2,6],[2,7],[1,7],[1,8],[1,9],[2,9],[3,9],[4,9],[4,10]], "flag": [4,10], "weight": 1 },
+          { "route_id": "right", "spawn": [8,0], "nodes": [[8,0],[8,1],[8,2],[7,2],[7,3],[6,3],[6,4],[6,5],[6,6],[6,7],[7,7],[7,8],[7,9],[6,9],[5,9],[4,9],[4,10]], "flag": [4,10], "weight": 1 }
+        ],
+        "flag": [4,10],
+        "void_obstacles": [[4,4],[4,5],[4,6]],
+        "initial_unlocked_tiles": [[3,1],[4,1],[5,1],[3,2],[4,2],[5,2],[3,7],[4,7],[5,7],[4,8]]
+      }
+    }
+  ]
+}
